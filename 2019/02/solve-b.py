@@ -49,19 +49,26 @@ def main():
     program = program.split(',')
     program = [int(i) for i in program]
 
-    # Before running, we corrupt the program with a 1202
-    program[1] = 12
-    program[2] = 2
-    new_state = run_program(program)
-
-    print(program)
-    print(new_state)
-
+    # Find the noun (program[1]) and verb (program[2]) that result in an output of 19690720
+    target = 19690720
     output_addr = 0
-    if len(new_state) > output_addr:
-        print('The value in index 0 is {0}'.format(new_state[output_addr]))
+    found = False
+    all_combos = [(i, j) for i in range(99) for j in range(99)]
+    for n, v in all_combos:
+        program[1] = n
+        program[2] = v
+        new_state = run_program(program)
+        if new_state[output_addr] == target:
+            print(program)
+            print(new_state)
+            found = True
+            break
+
+    if found:
+        print('The value in index 0 is {0} for noun {1} and verb {2}'.format(new_state[output_addr], n, v))
+        print('100 * noun + verb = {0}'.format(100 * n + v))
     else:
-        print("Output address {0} doesn't exist!".format(output_addr))
+        print('Exhausted all combinations. Did not find a result.')
 
 
 if __name__ == '__main__':
