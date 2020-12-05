@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-
 def passport_valid(pp):
-    valid = 'byr' in pp and 'iyr' in pp and 'eyr' in pp \
-        and 'hgt' in pp and 'hcl' in pp and 'ecl' in pp and 'pid' in pp
-    
-    return valid
+    return 'byr' in pp and 'iyr' in pp and 'eyr' in pp and 'hgt' in pp \
+        and 'hcl' in pp and 'ecl' in pp and 'pid' in pp
 
 
 def main():
