@@ -65,15 +65,27 @@ def height_ok(pp):
     return meas >= low and meas <= high
 
 
-def hair_color(pp):
+def hair_color_ok(pp):
     if 'hcl' not in pp:
         return False
 
-    hcl = pp['hcl']
-    if len(hcl) != 7:
+    result = re.match('\#[0-9a-f]{6}', pp['hcl'])
+    return result is not None
+
+
+def eye_color_ok(pp):
+    if 'ecl' not in pp:
         return False
 
-    result = re.match('', hcl)
+    ecl = pp['ecl']
+    return ecl in ['amb', 'blu', 'brn', 'gry', 'grn', 'hzl', 'oth']
+
+
+def passport_id_ok(pp):
+    if 'pid' not in pp:
+        return False
+
+    result = re.match('^[0-9]{9}$', pp['pid'])
     return result is not None
 
 
