@@ -28,22 +28,19 @@ def parse_rule(rule):
     return bag, bag_contents
 
 
-def can_contain(rules, bag_type, target_bag):
-    """
-    Returns True if the given bag_type can contain the target bag (recursively)
-    """
-    # get a list of bags that CAN go in this bag_type
-    valid_bags = list(rules[bag_type])
+def get_number_of_inner_bags(rules, target_bag):
+    sub_bags = rules[target_bag]
 
-    if len(valid_bags) == 0:
-        return False
+    if len(sub_bags) == 0:
+        return 0
 
-    if target_bag in valid_bags:
-        return True
-    else:
-        target_in_sub_bag = [can_contain(rules, b, target_bag) for b in valid_bags]
-        return any(target_in_sub_bag)
+    total = 0
+    for sub_bag in sub_bags:
+        quantity = sub_bags[sub_bag]
+        total = total + quantity
+        total = total + (quantity * get_number_of_inner_bags(rules, sub_bag))
 
+    return total
 
 def main():
     with open('input.txt', 'r') as f:
@@ -61,17 +58,10 @@ def main():
             break
         raw_rules[bag] = bag_contents
 
-    # We're looking to see how many bag types can contain (at some level) the target bag
     target_bag = 'shiny gold'
-    num_valid_containers = 0
-    for bag_type in raw_rules:
-        if bag_type == target_bag:
-            continue
-        else:
-            if can_contain(raw_rules, bag_type, target_bag):
-                num_valid_containers = num_valid_containers + 1
+    num_inner = get_number_of_inner_bags(raw_rules, target_bag)
 
-    print('There are {0} valid containing bags for a {1} bag.'.format(num_valid_containers, target_bag))
+    print('A {0} bag contains {1} inner bags.'.format(target_bag, num_inner))
 
 
 if __name__ == '__main__':
