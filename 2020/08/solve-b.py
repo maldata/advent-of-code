@@ -12,15 +12,14 @@ def execute_until_repeat_or_end(program):
 
         next_command = program[pc]
         number_of_executions = next_command[1]
-        mutation_tried = next_command[2]
-        operation = next_command[3]
-        argument = int(next_command[4])
+        operation = next_command[2]
+        argument = int(next_command[3])
         
         if number_of_executions > 0:
             return False, accumulator
 
         # Make a new tuple and replace the number of executions
-        new_state = (pc, number_of_executions + 1, mutation_tried, operation, argument)
+        new_state = (pc, number_of_executions + 1, operation, argument)
         program[pc] = new_state
         
         if operation == 'jmp':
@@ -44,15 +43,14 @@ def mutate_at_index(program, index):
         
         command_to_mutate = program[index]
         number_of_executions = command_to_mutate[1]
-        mutation_tried = command_to_mutate[2]
-        operation = command_to_mutate[3]
-        argument = command_to_mutate[4]
+        operation = command_to_mutate[2]
+        argument = command_to_mutate[3]
         
         if operation == 'jmp':
-            mutated_command = (index, number_of_executions, True, 'nop', argument)
+            mutated_command = (index, number_of_executions, 'nop', argument)
             break
         elif operation == 'nop':
-            mutated_command = (index, number_of_executions, True, 'jmp', argument)
+            mutated_command = (index, number_of_executions, 'jmp', argument)
             break
         else:
             # If it's an acc, just advance until we hit a nop or jmp
@@ -92,7 +90,7 @@ def main():
 
     # The tuples in the list are
     # (command index, number of executions, mutated, operation, argument)
-    command_states = [(i, 0, False, j.split(' ')[0], j.split(' ')[1]) for i, j in enumerate(full_program)]
+    command_states = [(i, 0, j.split(' ')[0], j.split(' ')[1]) for i, j in enumerate(full_program)]
 
     successful, accumulator = try_all_mutations(command_states)
     print('When the program ends correctly, the accumulator is {0}'.format(accumulator))
