@@ -64,28 +64,34 @@ class AddInstruction(Instruction):
 
         operand1 = self._get_operand(0)
         operand2 = self._get_operand(1)
-        operand3 = self._get_operand(2)
 
-        self._program[operand3] = operand1 + operand2
+        if self._parameter_modes[2] != InstructionMode.POSITION:
+            print('AddInstruction param 2 should only be position mode!')
+            raise ValueError
+
+        destination_addr = self._parameters[2]
+        self._program[destination_addr] = str(operand1 + operand2)
         
         return False, next_pc
+
 
 class MultiplyInstruction(Instruction):
     def __init__(self, program):
         super().__init__(program)
         self._num_params = 3
 
-        def execute(self, pc):
-            next_pc = self._get_next_pc(pc)
-            self._parse_word(pc, next_pc)
+    def execute(self, pc):
+        next_pc = self._get_next_pc(pc)
+        self._parse_word(pc, next_pc)
 
-            operand1 = self._get_operand(0)
-            operand2 = self._get_operand(1)
-            operand3 = self._get_operand(2)
+        operand1 = self._get_operand(0)
+        operand2 = self._get_operand(1)
+        operand3 = self._get_operand(2)
 
-            self._program[operand3] = operand1 * operand2
+        self._program[operand3] = operand1 * operand2
         
-            return False, next_pc
+        return False, next_pc
+
 
 class ReadInputInstruction(Instruction):
     def __init__(self, program):
@@ -96,13 +102,18 @@ class ReadInputInstruction(Instruction):
         next_pc = self._get_next_pc(pc)
         self._parse_word(pc, next_pc)
 
-        operand1 = self._get_operand(0)
+        if self._parameter_modes[0] != InstructionMode.POSITION:
+            print('ReadInputInstruction should only operate in position mode!')
+            raise ValueError
+
+        destination_addr = self._parameters[0]
 
         print('==> Enter a value: ')
-        i = input()
-        self._program[operand1] = int(i)
+        i = input()  # Note that i will be a string... and that's fine. So is the rest of _program.
+        self._program[destination_addr] = i
         
         return False, next_pc
+
 
 class PrintOutputInstruction(Instruction):
     def __init__(self, program):

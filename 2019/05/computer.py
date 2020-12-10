@@ -8,7 +8,7 @@ class Computer:
         self._halted = False
 
     def compute(self):
-        while self._halted == False:
+        while not self._halted:
             self._iterate()
 
     def _iterate(self):
@@ -37,5 +37,6 @@ class Computer:
         else:
             print('Unknown opcode {0} at pc {1}'.format(opcode, self._pc))
             self._halted = True
+            return
 
         self._halted, self._pc = instr.execute(self._pc)

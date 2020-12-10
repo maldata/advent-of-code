@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import pdb
-
 from computer import Computer
 
 
@@ -10,7 +8,6 @@ def main():
 
     program_text = all_lines[0].strip()
     program = program_text.split(',')
-    pdb.set_trace()
     c = Computer(program)
     c.compute()
 
