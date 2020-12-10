@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from program import Program
+import pdb
+
+from computer import Computer
 
 
 def main():
@@ -7,7 +9,10 @@ def main():
         all_lines = f.readlines()
 
     program_text = all_lines[0].strip()
-    program = Program(program_text)
+    program = program_text.split(',')
+    pdb.set_trace()
+    c = Computer(program)
+    c.compute()
 
 
 if __name__ == '__main__':
