@@ -6,7 +6,7 @@ def main():
     all_adapters = [int(i.strip()) for i in all_lines]
     all_adapters.sort()
 
-    # Add the built-in adapter that's 3 jolts higher than the maximum
+    # Add the wall joltage and the built-in adapter that's 3 jolts higher than the maximum
     all_joltages = [0] + all_adapters + [all_adapters[-1] + 3]
     deltas = [z[1] - z[0] for z in zip(all_joltages[:-1], all_joltages[1:])]
 
