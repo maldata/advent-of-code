@@ -3,7 +3,7 @@ from enum import Enum
 
 
 class InstructionMode(Enum):
-    POSITION = 0,
+    POSITION = 0
     IMMEDIATE = 1
 
 
@@ -27,7 +27,7 @@ class Instruction:
             if len(modes) < self.num_params:
                 diff = self.num_params - len(modes)
                 modes = '0' * diff + modes
-            self._parameter_modes = [InstructionMode(i) for i in modes[::-1]]
+            self._parameter_modes = [InstructionMode(int(i)) for i in modes[::-1]]
 
         if self.num_params == 0:
             self._parameters = []
@@ -144,3 +144,87 @@ class HaltInstruction(Instruction):
         self._parse_word(pc, next_pc)
         
         return True, next_pc
+
+class JumpIfTrueInstruction(Instruction):
+    def __init__(self, program):
+        super().__init__(program)
+        self._num_params = 2
+
+    def execute(self, pc):
+        next_pc = self._get_next_pc(pc)
+        self._parse_word(pc, next_pc)
+
+        operand1 = self._get_operand(0)  # If this value is non-zero, set the pc to ...
+        operand2 = self._get_operand(1)  # ... this!
+
+        if self._parameter_modes[1] != InstructionMode.POSITION:
+            print('JumpIfTrueInstruction param 1 should only be position mode!')
+            raise ValueError
+
+        if operand1 != 0:
+            next_pc = operand2
+        
+        return False, next_pc
+
+class JumpIfFalseInstruction(Instruction):
+    def __init__(self, program):
+        super().__init__(program)
+        self._num_params = 2
+
+    def execute(self, pc):
+        next_pc = self._get_next_pc(pc)
+        self._parse_word(pc, next_pc)
+
+        operand1 = self._get_operand(0)  # If this value is zero, set the pc to ...
+        operand2 = self._get_operand(1)  # ... this!
+
+        if self._parameter_modes[1] != InstructionMode.POSITION:
+            print('JumpIfFalseInstruction param 1 should only be position mode!')
+            raise ValueError
+
+        if operand1 == 0:
+            next_pc = operand2
+        
+        return False, next_pc
+
+class LessThanInstruction(Instruction):
+    def __init__(self, program):
+        super().__init__(program)
+        self._num_params = 3
+
+    def execute(self, pc):
+        next_pc = self._get_next_pc(pc)
+        self._parse_word(pc, next_pc)
+
+        operand1 = self._get_operand(0)  # If this value is less than ...
+        operand2 = self._get_operand(1)  # ... this value, then put a 1 in the param 3 location
+
+        if self._parameter_modes[2] != InstructionMode.POSITION:
+            print('LessThanInstruction param 2 should only be position mode!')
+            raise ValueError
+
+        destination_addr = self._parameters[2]
+        self._program[destination_addr] = 1 if operand1 < operand2 else 0
+
+        return False, next_pc
+
+class EqualsInstruction(Instruction):
+    def __init__(self, program):
+        super().__init__(program)
+        self._num_params = 3
+
+    def execute(self, pc):
+        next_pc = self._get_next_pc(pc)
+        self._parse_word(pc, next_pc)
+
+        operand1 = self._get_operand(0)  # If this value is equal to ...
+        operand2 = self._get_operand(1)  # ... this value, then put a 1 in the param 3 location
+
+        if self._parameter_modes[2] != InstructionMode.POSITION:
+            print('EqualsInstruction param 2 should only be position mode!')
+            raise ValueError
+
+        destination_addr = self._parameters[2]
+        self._program[destination_addr] = 1 if operand1 == operand2 else 0
+
+        return False, next_pc
