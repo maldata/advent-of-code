@@ -145,6 +145,7 @@ class HaltInstruction(Instruction):
         
         return True, next_pc
 
+
 class JumpIfTrueInstruction(Instruction):
     def __init__(self, program):
         super().__init__(program)
@@ -157,14 +158,11 @@ class JumpIfTrueInstruction(Instruction):
         operand1 = self._get_operand(0)  # If this value is non-zero, set the pc to ...
         operand2 = self._get_operand(1)  # ... this!
 
-        if self._parameter_modes[1] != InstructionMode.POSITION:
-            print('JumpIfTrueInstruction param 1 should only be position mode!')
-            raise ValueError
-
         if operand1 != 0:
             next_pc = operand2
         
         return False, next_pc
+
 
 class JumpIfFalseInstruction(Instruction):
     def __init__(self, program):
@@ -178,14 +176,11 @@ class JumpIfFalseInstruction(Instruction):
         operand1 = self._get_operand(0)  # If this value is zero, set the pc to ...
         operand2 = self._get_operand(1)  # ... this!
 
-        if self._parameter_modes[1] != InstructionMode.POSITION:
-            print('JumpIfFalseInstruction param 1 should only be position mode!')
-            raise ValueError
-
         if operand1 == 0:
             next_pc = operand2
         
         return False, next_pc
+
 
 class LessThanInstruction(Instruction):
     def __init__(self, program):
@@ -207,6 +202,7 @@ class LessThanInstruction(Instruction):
         self._program[destination_addr] = 1 if operand1 < operand2 else 0
 
         return False, next_pc
+
 
 class EqualsInstruction(Instruction):
     def __init__(self, program):
