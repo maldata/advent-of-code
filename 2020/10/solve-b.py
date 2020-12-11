@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 def count_paths(joltages):
     if len(joltages) == 1:
-        return 0
+        return 1
 
     valid_next_joltages = filter(lambda x: x <= joltages[0] + 3, joltages[1:])
     child_indices = [joltages.index(i) for i in valid_next_joltages]
