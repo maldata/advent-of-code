@@ -86,9 +86,13 @@ class MultiplyInstruction(Instruction):
 
         operand1 = self._get_operand(0)
         operand2 = self._get_operand(1)
-        operand3 = self._get_operand(2)
 
-        self._program[operand3] = operand1 * operand2
+        if self._parameter_modes[2] != InstructionMode.POSITION:
+            print('MultiplyInstruction param 2 should only be position mode!')
+            raise ValueError
+
+        destination_addr = self._parameters[2]
+        self._program[destination_addr] = str(operand1 * operand2)
         
         return False, next_pc
 
