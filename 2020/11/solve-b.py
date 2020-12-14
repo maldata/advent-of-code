@@ -23,22 +23,30 @@ def get_occupied(seat_map):
     return occupied
 
 
-def get_num_adjacent_occupied_seats(seat_map, row_idx, col_idx):
+def get_num_visible_occupied_seats(seat_map, row_idx, col_idx):
+    """
+    Step in each of the eight directions until you hit the first non-floor square or the edge.
+    If we hit an occupied seat, it's visible. Count it!
+    """
     num_rows = len(seat_map)
     num_cols = len(seat_map[0])
 
     occupied = 0
     deltas = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
     for dx, dy in deltas:
-        c = col_idx + dx
-        r = row_idx + dy
+        steps = 1
+        c = col_idx + steps * dx
+        r = row_idx + steps * dy
+        while 0 <= r < num_rows and 0 <= c < num_cols:
+            if seat_map[r][c] == '#':
+                occupied = occupied + 1
+                break
+            elif seat_map[r][c] == 'L':
+                break
+            steps = steps + 1
+            c = col_idx + steps * dx
+            r = row_idx + steps * dy
 
-        if r < 0 or r >= num_rows or c < 0 or c >= num_cols:
-            continue
-
-        if seat_map[r][c] == '#':
-            occupied = occupied + 1
-        
     return occupied
 
 
@@ -49,14 +57,14 @@ def evaluate_seat(seat_map, row_idx, col_idx):
     elif seat_map[row_idx][col_idx] == 'L':
         # If it's an empty seat and none of the surrounding 8
         # squares is an occupied seat, it becomes occupied.
-        if get_num_adjacent_occupied_seats(seat_map, row_idx, col_idx) == 0:
+        if get_num_visible_occupied_seats(seat_map, row_idx, col_idx) == 0:
             return '#'
         else:
             return 'L'
     elif seat_map[row_idx][col_idx] == '#':
-        # If it's an occupied seat and 4 or more adjacent
+        # If it's an occupied seat and 5 or more adjacent
         # squares are also occupied, it becomes empty.
-        if get_num_adjacent_occupied_seats(seat_map, row_idx, col_idx) >= 4:
+        if get_num_visible_occupied_seats(seat_map, row_idx, col_idx) >= 5:
             return 'L'
         else:
             return '#'
