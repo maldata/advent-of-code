@@ -31,14 +31,7 @@ def process_mem_line(cmd_string, mem, mask_str):
     masked = ''.join(masked)
     addresses = expand_floating_masks([masked])
     for a in addresses:
-        # Make sure our array is large enough
         int_addr = int(a, base=2)
-        current_size = len(mem)
-        required_size = int_addr + 1
-        if required_size > current_size:
-            additional_buffer = [0] * (required_size - current_size)
-            mem = mem + additional_buffer
-
         mem[int_addr] = value
 
     return mem
@@ -82,7 +75,7 @@ def main():
     command_strings = [i.strip() for i in all_lines]
 
     mask_str = ''
-    mem = []
+    mem = {}
     for cmd in command_strings:
         if cmd[0:4] == 'mask':
             mask_str = process_mask_line(cmd)
@@ -91,7 +84,10 @@ def main():
         else:
             print('I have no idea how to process a line like "{0}"'.format(cmd))
 
-    print('The sum of values in memory is {0}'.format(sum(mem)))
+    mem_sum = 0
+    for addr in mem:
+        mem_sum = mem_sum + mem[addr]
+    print('The sum of values in memory is {0}'.format(mem_sum))
 
 
 if __name__ == '__main__':
