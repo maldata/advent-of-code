@@ -35,16 +35,40 @@ def process_mem_line(cmd_string, mem, mask_str):
 
     masked = [mask_bit(i[0], i[1]) for i in zip(mask_str, value_as_bits)]
     masked = ''.join(masked)
-    masked_value = int(masked, base=2)
-    mem[index] = masked_value
+    addresses = expand_floating_masks([masked])
+    for a in addresses:
+        int_addr = int(a, base=2)
+        mem[int_addr] = value
+
     return mem
+
+
+def expand_floating_masks(mask_str_list):
+    no_floats = list(filter(lambda s: 'X' not in s, mask_str_list))
+    has_floats = list(filter(lambda s: 'X' in s, mask_str_list))
+
+    # If the there are no floating bits left in list we got, we're done!
+    if len(no_floats) == len(mask_str_list):
+        return no_floats
+
+    # If there are floating bits left, we expand one, then repeat
+    working = has_floats[0]
+    remaining = has_floats[1:]
+
+    i = working.index('X')
+    pre = working[0:i]
+    post = working[i + 1:]
+    replacements = [pre + '0' + post, pre + '1' + post]
+    return no_floats + expand_floating_masks(remaining + replacements)
 
 
 def mask_bit(mask, bit):
     if mask == 'X':
+        return 'X'
+    elif mask == '0':
         return bit
-    elif mask == '0' or mask == '1':
-        return mask
+    elif mask == '1':
+        return '1'
     else:
         print('{0} is not a valid mask!'.format(mask))
         return None
