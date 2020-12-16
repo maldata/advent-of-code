@@ -18,26 +18,27 @@ def process_mem_line(cmd_string, mem, mask_str):
         print('Malformed mem line "{0}"'.format(cmd_string))
         return None
 
-    index = int(r.group(1))
+    base_address = int(r.group(1))
     value = int(r.group(2))
 
-    # Make sure our array is large enough
-    current_size = len(mem)
-    required_size = index + 1
-    if required_size > current_size:
-        additional_buffer = [0] * (required_size - current_size)
-        mem = mem + additional_buffer
+    base_address_as_bits = format(base_address, 'b')
 
-    value_as_bits = format(value, 'b')
-    # add leading zeros
-    if len(value_as_bits) < 36:
-        value_as_bits = '0' * (36 - len(value_as_bits)) + value_as_bits
+    # add leading zeros to the address, if needed.
+    if len(base_address_as_bits) < 36:
+        base_address_as_bits = '0' * (36 - len(base_address_as_bits)) + base_address_as_bits
 
-    masked = [mask_bit(i[0], i[1]) for i in zip(mask_str, value_as_bits)]
+    masked = [mask_bit(i[0], i[1]) for i in zip(mask_str, base_address_as_bits)]
     masked = ''.join(masked)
     addresses = expand_floating_masks([masked])
     for a in addresses:
+        # Make sure our array is large enough
         int_addr = int(a, base=2)
+        current_size = len(mem)
+        required_size = int_addr + 1
+        if required_size > current_size:
+            additional_buffer = [0] * (required_size - current_size)
+            mem = mem + additional_buffer
+
         mem[int_addr] = value
 
     return mem
