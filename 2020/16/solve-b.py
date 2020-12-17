@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import re
 
+
 class Rule:
     def __init__(self, name, range1_lo, range1_hi, range2_lo, range2_hi):
         self.name = name
@@ -22,6 +23,9 @@ class Rule:
 
     def all_values_pass(self, field_samples):
         results = [self.range1_lo <= field <= self.range1_hi or self.range2_lo <= field <= self.range2_hi for field in field_samples]
+        f = filter(lambda x: x[1] == False, enumerate(results))
+        false_idxs = [field_samples[i[0]] for i in f]
+        print('Failed in {0} ({1} - {2} OR {3} - {4}): {5}'.format(self.name, self.range1_lo, self.range1_hi, self.range2_lo, self.range2_hi, false_idxs))
         return all(results)
     
 
@@ -90,6 +94,7 @@ def main():
     field_lookup = {}
     for field_list in transposed_fields:
         print('------------------')
+        print('SAMPLES: {0}'.format(field_list))
         num_matching_fields = 0
         matching_fields = []
         for rule in rule_set:
@@ -110,9 +115,16 @@ def main():
             if pf not in ordered_field_names:
                 ordered_field_names.append(pf)
 
+    print()
+    print('MY TICKET:')
+    print(my_ticket)
     for idx in range(len(ordered_field_names)):
         print('{0} - {1}'.format(ordered_field_names[idx], my_ticket[idx]))
-                    
-    
+
+    # Quick double-check...
+    for rule in rule_set:
+        rule.get_invalid_fields(my_ticket)
+
+
 if __name__ == '__main__':
     main()
