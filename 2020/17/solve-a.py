@@ -10,44 +10,67 @@ index_of_origin = deltas.index( (0, 0, 0) )
 deltas = deltas[0:index_of_origin] + deltas[index_of_origin + 1:]
 
 
-def get_neighbors(point):
+class Cube:
+    def __init__(self, active, frontier, coords):
+        self.active = active
+        self.frontier = frontier
+        self.position = coords
+
+
+def get_neighboring_points(point):
     return [(point[0] + d[0], point[1] + d[1], point[2] + d[2]) for d in deltas]
 
 
-def iterate(coords):
-    new_coords = {}
-    for c in coords:
+def grow_space(coords, frontier_cubes):
+    new_frontier = []
+    for fc in frontier_cubes:
+        fc.frontier = False  # Unset this cube as a frontier cube
+        neighboring_points = get_neighboring_points(fc.position)
+        for n in neighboring_points:
+            if n not in coords:
+                # Nothing at this position yet. Make a new cube and set it as being on the frontier.
+                coords[n] = Cube(False, True, n)
+                new_frontier.append(coords[n])
+
+    return coords, new_frontier
+
+
+def iterate(coords, frontier_cubes):
+    new_coords, new_frontier = grow_space(coords, frontier_cubes)
+    for c in new_coords:
         active_neighbors = 0
-        for n in get_neighbors(c):
-            if coords.get(n, False):
+        for n in get_neighboring_points(c):
+            if n in new_coords and new_coords[n].active:
                 active_neighbors = active_neighbors + 1
             
-        is_active = coords[c]
+        is_active = new_coords[c].active
         if is_active and (active_neighbors == 2 or active_neighbors == 3):
-            new_coords[c] = True
+            new_coords[c].active = True
         elif not is_active and active_neighbors == 3:
-            new_coords[c] = True
+            new_coords[c].active = True
         else:
-            new_coords[c] = False
+            new_coords[c].active = False
         
-    return new_coords
+    return new_coords, new_frontier
 
 
 def main():
-    with open('./input.txt', 'r') as f:
+    with open('./test-input.txt', 'r') as f:
         all_lines = f.readlines()
 
     plane = [i.strip() for i in all_lines]
     coords = {}
+    frontier_cubes = []
     for row_idx in range(len(plane)):
         for col_idx in range(len(plane[row_idx])):
             active = plane[row_idx][col_idx] == '#'
-            element = (col_idx, row_idx, 0)
-            coords[element] = active
+            pos = (col_idx, row_idx, 0)
+            coords[pos] = Cube(active, True, pos)
+            frontier_cubes.append(coords[pos])
 
     for cycle_idx in range(6):
-        coords = iterate(coords)
-        print(new_coords)
+        coords, frontier_cubes = iterate(coords, frontier_cubes)
+        print([(coord, coords[coord].active) for coord in coords])
         print()
         print()
         print()
