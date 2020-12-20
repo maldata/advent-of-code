@@ -41,7 +41,7 @@ class Space:
             for y in range(self.mins[1], self.maxs[1] + 1):
                 row = ''
                 for x in range(self.mins[0], self.maxs[0] + 1):
-                    cube = self.cube_lookup[(x,y,z)]
+                    cube = self.cube_lookup[(x, y, z)]
                     if cube.active:
                         row = row + '#'
                     else:
@@ -84,42 +84,48 @@ class Space:
         self.frontier_cubes = new_frontier
         self.set_mins_maxs()
 
-
     def evolve(self):
+        new_cube_lookup = {}
         for c in self.cube_lookup:
             current_cube = self.cube_lookup[c]
+            new_cube = Cube(current_cube.active, c)
+
             active_neighbors = 0
-            for n in self.get_neighboring_points(current_cube):                
+            all_neighbors = self.get_neighboring_points(current_cube)
+            for n in all_neighbors:
                 if n in self.cube_lookup and self.cube_lookup[n].active:
                     active_neighbors = active_neighbors + 1
 
-            if c[0] == 0 and c[1] == 1 and c[2] == -1:
-                print(self.get_neighboring_points(current_cube))
-                    
-            is_active = current_cube.active
+            is_active = new_cube.active
             if is_active and (active_neighbors == 2 or active_neighbors == 3):
-                current_cube.active = True
+                new_cube.active = True
             elif not is_active and active_neighbors == 3:
-                current_cube.active = True
+                new_cube.active = True
             else:
-                current_cube.active = False
+                new_cube.active = False
+
+            new_cube_lookup[c] = new_cube
+
+        self.cube_lookup = new_cube_lookup
 
 
 def main():
     s = Space('./test-input.txt')
-    s.print_space()
-
-    sep = "*****************"
+    # s.print_space()
+    # sep = "*****************"
     
-    num_iterations = 1
+    num_iterations = 6
     for i in range(num_iterations):
         s.grow()
         s.evolve()
 
-        print(sep)
-        print('AFTER {0} ITERATIONS:'.format(i+1))
-        print()
-        s.print_space()
+        # print(sep)
+        # print('AFTER {0} ITERATIONS:'.format(i+1))
+        # print()
+        # s.print_space()
+
+    num_active_cubes = s.get_num_active_cubes()
+    print('After {0} iterations, there are {1} active cubes'.format(num_iterations, num_active_cubes))
         
         
 if __name__ == '__main__':
