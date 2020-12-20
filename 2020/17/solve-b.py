@@ -19,14 +19,17 @@ class Space:
         for row_idx in range(len(input_plane)):
             for col_idx in range(len(input_plane[row_idx])):
                 active = input_plane[row_idx][col_idx] == '#'
-                pos = (col_idx, row_idx, 0)
+                pos = (col_idx, row_idx, 0, 0)
                 self.cube_lookup[pos] = Cube(active, pos)
                 self.frontier_cubes.append(self.cube_lookup[pos])
 
         self.set_mins_maxs()
 
     def set_mins_maxs(self):
-        all_coords = [(self.cube_lookup[point].position[0], self.cube_lookup[point].position[1], self.cube_lookup[point].position[2]) for point in self.cube_lookup]
+        all_coords = [(self.cube_lookup[point].position[0],
+                       self.cube_lookup[point].position[1],
+                       self.cube_lookup[point].position[2],
+                       self.cube_lookup[point].position[3],) for point in self.cube_lookup]
         by_axis = list(zip(*all_coords))
         self.mins = list(map(min, by_axis))
         self.maxs = list(map(max, by_axis))
@@ -61,13 +64,14 @@ class Space:
         for dx in range(-1, 2):
             for dy in range(-1, 2):
                 for dz in range(-1, 2):
-                    deltas.append( (dx, dy, dz) )
+                    for dw in range(-1, 2):
+                        deltas.append( (dx, dy, dz, dw) )
                     
-        index_of_origin = deltas.index( (0, 0, 0) )
+        index_of_origin = deltas.index( (0, 0, 0, 0) )
         deltas = deltas[0:index_of_origin] + deltas[index_of_origin + 1:]
         
         p = cube.position
-        neighbors = [(p[0] + d[0], p[1] + d[1], p[2] + d[2]) for d in deltas]
+        neighbors = [(p[0] + d[0], p[1] + d[1], p[2] + d[2], p[3] + d[3]) for d in deltas]
         return neighbors
     
     def grow(self):
