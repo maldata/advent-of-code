@@ -77,5 +77,5 @@ def main(rule_file, msg_file):
 
 if __name__ == '__main__':
     #main('./test-rules2.txt', './test-msgs2.txt')
-    main('./test-rules1.txt', './test-msgs1.txt')
-    #main('./rules.txt', './sample-msgs.txt')
+    #main('./test-rules1.txt', './test-msgs1.txt')
+    main('./rules.txt', './sample-msgs.txt')
