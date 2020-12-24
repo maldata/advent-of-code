@@ -2,6 +2,122 @@
 import re
 
 
+class Image:
+    def __init__(self, tiles):
+        self.tiles = tiles
+        self.placed_tiles = {}
+
+    def place_tiles(self):
+        """
+        The tiles are all tagged with the number of borders that match another tile.
+        The center ones have 4 shared borders, the corners have 2, the ones along the
+        edge have 3.
+        """
+        # A big-ass dictionary that maps border strings to tile IDs
+        all_edges = {}
+
+        centers = []
+        sides = []
+        corners = []
+        for tile_id in self.tiles:
+            t = self.tiles[tile_id]
+            if t.border_matches == 4:
+                centers.append(tile_id)
+            elif t.border_matches == 3:
+                sides.append(tile_id)
+            else:
+                corners.append(tile_id)
+
+            for border_edge in t.border:
+                if border_edge in all_edges:
+                    all_edges[border_edge].append(tile_id)
+                    all_edges[border_edge[::-1]].append(tile_id)
+                else:
+                    all_edges[border_edge] = [tile_id]
+                    all_edges[border_edge[::-1]] = [tile_id]
+
+        # Pick a corner tile arbitrarily. Orient it to sit in the top left corner. That is,
+        # the edge strings that only exist on this tile are on top & left.
+        arbitrary_corner_id = corners[0]
+        arbitrary_corner = self.tiles[arbitrary_corner_id]
+        while True:
+            if len(all_edges[arbitrary_corner.border[0]]) == 1 and len(all_edges[arbitrary_corner.border[3]]) == 1:
+                break
+            else:
+                arbitrary_corner.rotate(1)
+
+        # i will be our row index, j will be our column index. So we go left to right, top to bottom.
+        square_size = 12
+        for i in range(square_size):
+            for j in range(square_size):
+                if i == 0 and j == 0:
+                    # We already got this one set up correctly, so just set it
+                    self.placed_tiles[(i, j)] = arbitrary_corner_id
+                elif j == 0:
+                    # If it's the first tile in a row (other than (0, 0)), use the one above
+                    # it to identify the tile, then orient to match the tile above
+                    tile_above_id = self.placed_tiles[(i - 1, j)]
+                    tile_above = self.tiles[tile_above_id]
+                    target_border_str = tile_above.border[2]  # bottom string of above tile
+                    target_tile_ids = all_edges[target_border_str]
+                    target_tile_id = filter(lambda x: x != tile_above_id, target_tile_ids)
+                    target_tile_id = list(target_tile_id)[0]
+                    target_tile = self.tiles[target_tile_id]
+
+                    # Orient it so the edge that doesn't match anything is on the left
+                    while True:
+                        if len(all_edges[target_tile.border[3]]) == 1:
+                            break
+                        else:
+                            target_tile.rotate(1)
+
+                    # Now you still might need to flip it, if the top edge of the new tile
+                    # is backward relative to the tile above. If so, we flip it along the
+                    # vertical axis, putting the outer edge on the inside, then rotate twice.
+                    if target_border_str != target_tile.border[0]:
+                        target_tile.flip()
+                        target_tile.rotate(2)
+
+                    self.placed_tiles[(i, j)] = target_tile_id
+                else:
+                    # For everything else, align it with the one on the left
+                    left_tile_id = self.placed_tiles[(i, j - 1)]
+                    left_tile = self.tiles[left_tile_id]
+                    target_border_str = left_tile.border[1]  # right string of left tile
+                    target_tile_ids = all_edges[target_border_str]
+                    target_tile_id = filter(lambda x: x != left_tile_id, target_tile_ids)
+                    target_tile_id = list(target_tile_id)[0]
+                    target_tile = self.tiles[target_tile_id]
+
+                    # Orient it so the target_border_str is on the left
+                    while True:
+                        if target_tile.border[3] == target_border_str:
+                            break
+                        elif target_tile.border[3][::-1] == target_border_str:
+                            target_tile.flip()
+                            target_tile.rotate(2)
+                            break
+                        else:
+                            target_tile.rotate(1)
+
+                    self.placed_tiles[(i, j)] = target_tile_id
+
+        deleteme = self.tiles['3373']
+        pass
+
+    def print_with_borders(self):
+        square_size = 12
+        num_lines = 10
+        for i in range(square_size):
+            for k in range(num_lines):
+                full_line = ''
+                for j in range(square_size):
+                    tile_id = self.placed_tiles[(i, j)]
+                    tile = self.tiles[tile_id]
+                    full_line = full_line + tile.lines[k]
+                print(full_line)
+
+
 class Tile:
     def __init__(self, tile_id, lines):
         self.id = tile_id
@@ -27,20 +143,30 @@ class Tile:
         for i in range(num_rotations):
             self.border = [self.border[-1]] + self.border[0:-1]
 
+        # TODO: extract from lines instead
         # After we rotate, reverse the order of the new top & bottom strings
         self.border[0] = self.border[0][::-1]
         self.border[2] = self.border[2][::-1]
+
+        new_lines = []
+        for i in range(len(self.lines)):
+            new_line = ''.join([line[i] for line in self.lines])
+            new_lines.append(new_line[::-1])
+        self.lines = new_lines
 
     def flip(self):
         """
         Flip along the vertical axis. Keep border strings 0 & 2 where they are
         in the array, but swap 1 & 3. Then, reverse strings 0 & 2.
         """
+        # TODO: extract from lines instead
         temp = self.border[1]
         self.border[1] = self.border[3]
         self.border[3] = temp
         self.border[0] = self.border[0][::-1]
         self.border[2] = self.border[2][::-1]
+
+        self.lines = [line[::-1] for line in self.lines]
 
     def num_shared_borders(self, other_tile):
         # I guess we'll just assume we put the other tile to the right of this one,
@@ -79,6 +205,7 @@ def populate_num_shared_borders(tiles):
 
 
 def main(tile_file):
+    print('Reading data...')
     with open(tile_file, 'r') as f:
         all_lines = f.readlines()
 
@@ -86,6 +213,7 @@ def main(tile_file):
     filtered = filter(lambda line: line != '', all_lines)
     all_lines = list(filtered)
 
+    print('Creating tiles...')
     tiles = {}
     lines_per_tile = 11
     for i in range(len(all_lines) // lines_per_tile):
@@ -99,17 +227,17 @@ def main(tile_file):
             body = tile_lines[1:]
             tiles[tile_id] = Tile(tile_id, body)
 
+    print("Populating each tile's number of shared borders...")
     populate_num_shared_borders(tiles)
 
-    corner_tiles = []
-    product = 1
-    for tile_id in tiles:
-        tile = tiles[tile_id]
-        if tile.border_matches == 2:
-            corner_tiles.append(tile_id)
-            product = product * int(tile_id)
+    print('Laying out tiles...')
+    image = Image(tiles)
+    image.place_tiles()
 
-    print('Corner tiles: {0}. Product: {1}'.format(corner_tiles, product))
+    print('Printing the full image...')
+    print()
+    print()
+    image.print_with_borders()
 
 
 if __name__ == '__main__':
