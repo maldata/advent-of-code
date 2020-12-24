@@ -9,48 +9,73 @@ class Tile:
 
         # border is a list of 4 strings (top, right, bottom, left). We don't
         # much care about the innards, just lining up the borders. When we
-        # rotate it, we'll shift them.
+        # rotate it, we'll shift them. The border strings are always interpreted
+        # as being read from left to right or from top to bottom.
         top = self.lines[0]
         bottom = self.lines[-1]
         left = ''.join([i[0] for i in self.lines])
         right = ''.join([i[-1] for i in self.lines])
         self.border = [top, right, bottom, left]
+        self.border_matches = 0
 
     def rotate(self, num_rotations):
         """
-        Rotate the tile by 90 degrees (one shift of the border list) per rotation
+        Rotate the tile by 90 degrees (one shift of the border list) per rotation.
+        Note that during a rotation, we need to reverse some strings in order to
+        preserve the left-to-right & top-to-bottom interpretations.
         """
         for i in range(num_rotations):
             self.border = [self.border[-1]] + self.border[0:-1]
 
-    def shared_border(self, other_tile):
-        for b in self.border:
-            if b in other_tile.border:
-                return b
+        # After we rotate, reverse the order of the new top & bottom strings
+        self.border[0] = self.border[0][::-1]
+        self.border[2] = self.border[2][::-1]
+
+    def flip(self):
+        """
+        Flip along the vertical axis. Keep border strings 0 & 2 where they are
+        in the array, but swap 1 & 3. Then, reverse strings 0 & 2.
+        """
+        temp = self.border[1]
+        self.border[1] = self.border[3]
+        self.border[3] = temp
+        self.border[0] = self.border[0][::-1]
+        self.border[2] = self.border[2][::-1]
+
+    def num_shared_borders(self, other_tile):
+        # I guess we'll just assume we put the other tile to the right of this one,
+        # rotate four times, flip, and rotate 4 times again.
+        for ro in range(4):
+            for r in range(4):
+                if self.border[1] == other_tile.border[3]:
+                    self.border_matches = self.border_matches + 1
+                self.rotate(1)
+
+            self.flip()
+
+            for r in range(4):
+                if self.border[1] == other_tile.border[3]:
+                    self.border_matches = self.border_matches + 1
+                self.rotate(1)
+
+            # Rotate the other one, but don't flip it (only need to flip one of the two)
+            other_tile.rotate(1)
 
 
-def get_corner_tiles(tiles):
+def populate_num_shared_borders(tiles):
     all_tile_ids = list(tiles)
-    corner_tile_ids = []
-    while len(corner_tile_ids) < 4:
+    num_shifts = 0
+    while num_shifts < len(all_tile_ids):
         target_tile_id = all_tile_ids[0]
         target_tile = tiles[target_tile_id]
 
-        num_borders = 0
         comparison_tile_ids = all_tile_ids[1:]
         for ct in comparison_tile_ids:
             comp_tile = tiles[ct]
-            if target_tile.shared_border(comp_tile) is not None:
-                num_borders = num_borders + 1
-
-        # If we found a corner piece, hold onto its ID.
-        # Either way, shift it to the end of the list.
-        if num_borders == 2:
-            corner_tile_ids.append(target_tile_id)
+            target_tile.num_shared_borders(comp_tile)
 
         all_tile_ids = all_tile_ids[1:] + [all_tile_ids[0]]
-
-    return corner_tile_ids
+        num_shifts = num_shifts + 1
 
 
 def main(tile_file):
@@ -74,13 +99,19 @@ def main(tile_file):
             body = tile_lines[1:]
             tiles[tile_id] = Tile(tile_id, body)
 
-    corner_tiles = get_corner_tiles(tiles)
+    populate_num_shared_borders(tiles)
+
+    corner_tiles = []
     product = 1
-    for corner_id in corner_tiles:
-        product = product * int(corner_id)
+    for tile_id in tiles:
+        tile = tiles[tile_id]
+        if tile.border_matches == 2:
+            corner_tiles.append(tile_id)
+            product = product * int(tile_id)
 
     print('Corner tiles: {0}. Product: {1}'.format(corner_tiles, product))
 
 
 if __name__ == '__main__':
-    main('./test-input1.txt')
+    # main('./test-input1.txt')
+    main('./input.txt')
