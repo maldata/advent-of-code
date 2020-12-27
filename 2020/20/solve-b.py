@@ -27,9 +27,6 @@ def main(tile_file):
             body = tile_lines[1:]
             tiles[tile_id] = Tile(tile_id, body)
 
-    print("Populating each tile's number of shared borders...")
-    populate_num_shared_borders(tiles)
-
     print('Laying out tiles...')
     image = Image(tiles)
     image.place_tiles()

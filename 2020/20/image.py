@@ -5,6 +5,7 @@ class Image:
     def __init__(self, tiles):
         self.tiles = tiles
         self.placed_tiles = {}
+        self._tiles_per_side = 12
 
         # These are lists separating the tiles into groups based on
         # how many sides they share with other tiles.
@@ -45,7 +46,7 @@ class Image:
 
             # As long as we're at it, let's take the four borders of this tile
             # (and the reverse of each) and use them as keys in the edge lookup dictionary.
-            for b in target_tile.border:
+            for b in target_tile.borders:
                 b_rev = b[::-1]
                 if b in self._edge_lookup:
                     self._edge_lookup[b].append(target_tile_id)
@@ -60,8 +61,8 @@ class Image:
         arbitrary_corner_id = self._corners[0]
         arbitrary_corner = self.tiles[arbitrary_corner_id]
         while True:
-            top_border_str = arbitrary_corner.border[BorderEdges.TOP]
-            left_border_str = arbitrary_corner.border[BorderEdges.LEFT]
+            top_border_str = arbitrary_corner.borders[BorderEdges.TOP.value]
+            left_border_str = arbitrary_corner.borders[BorderEdges.LEFT.value]
             tiles_with_top_str = self._edge_lookup[top_border_str]
             tiles_with_left_str = self._edge_lookup[left_border_str]
 
@@ -71,9 +72,8 @@ class Image:
                 arbitrary_corner.rotate(1)
 
         # i will be our row index, j will be our column index. So we go left to right, top to bottom.
-        square_size = 12
-        for i in range(square_size):
-            for j in range(square_size):
+        for i in range(self._tiles_per_side):
+            for j in range(self._tiles_per_side):
                 if i == 0 and j == 0:
                     # We already got this one set up correctly, so just set it
                     self.placed_tiles[(i, j)] = arbitrary_corner_id
@@ -82,52 +82,70 @@ class Image:
                     # it to identify the tile, then orient to match the tile above
                     tile_above_id = self.placed_tiles[(i - 1, j)]
                     tile_above = self.tiles[tile_above_id]
-                    target_border_str = tile_above.border[2]  # bottom string of above tile
-                    target_tile_ids = self._edge_lookup[target_border_str]
-                    target_tile_id = filter(lambda x: x != tile_above_id, target_tile_ids)
-                    target_tile_id = list(target_tile_id)[0]
-                    target_tile = self.tiles[target_tile_id]
+
+                    # bottom string of above tile... this is what we search for
+                    target_border_str = tile_above.borders[BorderEdges.BOTTOM.value]
+                    print('Tile above {0} has bottom border {1}'.format(tile_above_id, target_border_str))
+
+                    # Get all tiles with that string
+                    matching_tile_ids = self._edge_lookup[target_border_str]
+                    print('Tiles with that string: {0}'.format(matching_tile_ids))
+
+                    # Filter the tile above out of the list of matching tiles
+                    matching_tile_id = filter(lambda x: x != tile_above_id, matching_tile_ids)
+                    matching_tile_id = list(matching_tile_id)[0]
+                    print('Picked {0}'.format(matching_tile_id))
+
+                    # So now we have the tile ID that goes in this position
+                    matching_tile = self.tiles[matching_tile_id]
 
                     # Orient it so the edge that doesn't match anything is on the left
                     while True:
-                        if len(self._edge_lookup[target_tile.border[3]]) == 1:
+                        left_border_str = matching_tile.borders[BorderEdges.LEFT.value]
+                        tiles_with_left_str = self._edge_lookup[left_border_str]
+                        if len(tiles_with_left_str) == 1:
                             break
                         else:
-                            target_tile.rotate(1)
+                            matching_tile.rotate()
 
                     # Now you still might need to flip it, if the top edge of the new tile
                     # is backward relative to the tile above. If so, we flip it along the
                     # vertical axis, putting the outer edge on the inside, then rotate twice.
-                    if target_border_str != target_tile.border[0]:
-                        target_tile.flip()
-                        target_tile.rotate(2)
+                    if matching_tile.borders[BorderEdges.TOP.value] != target_border_str:
+                        matching_tile.flip()
+                        matching_tile.rotate(2)
 
-                    self.placed_tiles[(i, j)] = target_tile_id
+                    self.placed_tiles[(i, j)] = matching_tile_id
                 else:
                     # For everything else, align it with the one on the left
                     left_tile_id = self.placed_tiles[(i, j - 1)]
                     left_tile = self.tiles[left_tile_id]
-                    target_border_str = left_tile.border[1]  # right string of left tile
-                    target_tile_ids = self._edge_lookup[target_border_str]
-                    target_tile_id = filter(lambda x: x != left_tile_id, target_tile_ids)
-                    target_tile_id = list(target_tile_id)[0]
-                    target_tile = self.tiles[target_tile_id]
+
+                    # right string of left tile
+                    target_border_str = left_tile.borders[BorderEdges.RIGHT.value]
+
+                    # Get all tiles with that string
+                    matching_tile_ids = self._edge_lookup[target_border_str]
+
+                    # Filter the tile above out of the list of matching tiles
+                    matching_tile_id = filter(lambda x: x != left_tile_id, matching_tile_ids)
+                    matching_tile_id = list(matching_tile_id)[0]
+
+                    # So now we have the tile ID that goes in this position
+                    matching_tile = self.tiles[matching_tile_id]
 
                     # Orient it so the target_border_str is on the left
                     while True:
-                        if target_tile.border[3] == target_border_str:
+                        if matching_tile.borders[BorderEdges.LEFT.value] == target_border_str:
                             break
-                        elif target_tile.border[3][::-1] == target_border_str:
-                            target_tile.flip()
-                            target_tile.rotate(2)
+                        elif matching_tile.borders[BorderEdges.LEFT.value][::-1] == target_border_str:
+                            matching_tile.flip()
+                            matching_tile.rotate(2)
                             break
                         else:
-                            target_tile.rotate(1)
+                            matching_tile.rotate()
 
-                    self.placed_tiles[(i, j)] = target_tile_id
-
-        deleteme = self.tiles['3373']
-        pass
+                    self.placed_tiles[(i, j)] = matching_tile_id
 
     def print_with_borders(self):
         square_size = 12
@@ -138,5 +156,6 @@ class Image:
                 for j in range(square_size):
                     tile_id = self.placed_tiles[(i, j)]
                     tile = self.tiles[tile_id]
-                    full_line = full_line + tile.lines[k]
+                    full_line = full_line + tile.lines[k] + ' '
                 print(full_line)
+            print()

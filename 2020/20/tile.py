@@ -48,14 +48,14 @@ class Tile:
         # flip, and rotate 4 more times. Then rotate the other tile and repeat.
         for other_tile_side in range(4):
             for this_tile_side in range(4):
-                if self.border[BorderEdges.RIGHT] == other_tile.border[BorderEdges.LEFT]:
+                if self.borders[BorderEdges.RIGHT.value] == other_tile.borders[BorderEdges.LEFT.value]:
                     self.border_matches = self.border_matches + 1
                 self.rotate()
 
             self.flip()
 
             for this_tile_side in range(4):
-                if self.border[BorderEdges.RIGHT] == other_tile.border[BorderEdges.LEFT]:
+                if self.borders[BorderEdges.RIGHT.value] == other_tile.borders[BorderEdges.LEFT.value]:
                     self.border_matches = self.border_matches + 1
                 self.rotate()
 
