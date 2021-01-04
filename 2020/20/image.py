@@ -71,16 +71,18 @@ class Image:
             else:
                 arbitrary_corner.rotate(1)
 
-        # i will be our row index, j will be our column index. So we go left to right, top to bottom.
-        for i in range(self._tiles_per_side):
-            for j in range(self._tiles_per_side):
-                if i == 0 and j == 0:
+        # y will be our row index (positive down), and x will be our
+        # column index (positive right). So we go left to right, top to bottom.
+        for y in range(self._tiles_per_side):
+            for x in range(self._tiles_per_side):
+                if x == 0 and y == 0:
                     # We already got this one set up correctly, so just set it
-                    self.placed_tiles[(i, j)] = arbitrary_corner_id
-                elif j == 0:
+                    self.placed_tiles[(x, y)] = arbitrary_corner_id
+                    arbitrary_corner.cement((x, y))
+                elif x == 0:
                     # If it's the first tile in a row (other than (0, 0)), use the one above
                     # it to identify the tile, then orient to match the tile above
-                    tile_above_id = self.placed_tiles[(i - 1, j)]
+                    tile_above_id = self.placed_tiles[(x, y - 1)]
                     tile_above = self.tiles[tile_above_id]
 
                     # bottom string of above tile... this is what we search for
@@ -92,7 +94,7 @@ class Image:
                     print('Tiles with that string: {0}'.format(matching_tile_ids))
 
                     # Filter the tile above out of the list of matching tiles
-                    matching_tile_id = filter(lambda x: x != tile_above_id, matching_tile_ids)
+                    matching_tile_id = filter(lambda t: t != tile_above_id, matching_tile_ids)
                     matching_tile_id = list(matching_tile_id)[0]
                     print('Picked {0}'.format(matching_tile_id))
 
@@ -115,10 +117,11 @@ class Image:
                         matching_tile.flip()
                         matching_tile.rotate(2)
 
-                    self.placed_tiles[(i, j)] = matching_tile_id
+                    self.placed_tiles[(x, y)] = matching_tile_id
+                    matching_tile.cement((x, y))
                 else:
                     # For everything else, align it with the one on the left
-                    left_tile_id = self.placed_tiles[(i, j - 1)]
+                    left_tile_id = self.placed_tiles[(x - 1, y)]
                     left_tile = self.tiles[left_tile_id]
 
                     # right string of left tile
@@ -128,7 +131,7 @@ class Image:
                     matching_tile_ids = self._edge_lookup[target_border_str]
 
                     # Filter the tile above out of the list of matching tiles
-                    matching_tile_id = filter(lambda x: x != left_tile_id, matching_tile_ids)
+                    matching_tile_id = filter(lambda t: t != left_tile_id, matching_tile_ids)
                     matching_tile_id = list(matching_tile_id)[0]
 
                     # So now we have the tile ID that goes in this position
@@ -145,7 +148,8 @@ class Image:
                         else:
                             matching_tile.rotate()
 
-                    self.placed_tiles[(i, j)] = matching_tile_id
+                    self.placed_tiles[(x, y)] = matching_tile_id
+                    matching_tile.cement((x, y))
 
     def print_with_borders(self):
         square_size = 12

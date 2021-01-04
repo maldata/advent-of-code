@@ -13,6 +13,7 @@ class Tile:
         self.id = tile_id
         self.lines = lines
         self.border_matches = 0
+        self._cemented_pos = None
 
     @property
     def borders(self):
@@ -30,6 +31,9 @@ class Tile:
         """
         Rotate the tile by 90 degrees per rotation.
         """
+        if self._cemented_pos is not None:
+            print('==> Trying to rotate cemented tile {0} at position {1}'.format(self.id, self._cemented_pos))
+
         for r in range(num_rotations):
             new_lines = []
             for i in range(len(self.lines)):
@@ -41,7 +45,13 @@ class Tile:
         """
         Flip along the vertical axis by reversing all strings
         """
+        if self._cemented_pos is not None:
+            print('==> Trying to flip cemented tile {0} at position {1}'.format(self.id, self._cemented_pos))
+
         self.lines = [line[::-1] for line in self.lines]
+
+    def cement(self, pos):
+        self._cemented_pos = pos
 
     def num_shared_borders(self, other_tile):
         # We'll assume we put the other tile to the right of this one, rotate four times,
