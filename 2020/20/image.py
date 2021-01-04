@@ -87,7 +87,7 @@ class Image:
 
                     # bottom string of above tile... this is what we search for
                     target_border_str = tile_above.borders[BorderEdges.BOTTOM.value]
-                    print('Tile above {0} has bottom border {1}'.format(tile_above_id, target_border_str))
+                    print('Tile above ({0}) has bottom border {1}'.format(tile_above_id, target_border_str))
 
                     # Get all tiles with that string
                     matching_tile_ids = self._edge_lookup[target_border_str]
@@ -101,21 +101,46 @@ class Image:
                     # So now we have the tile ID that goes in this position
                     matching_tile = self.tiles[matching_tile_id]
 
-                    # Orient it so the edge that doesn't match anything is on the left
-                    while True:
-                        left_border_str = matching_tile.borders[BorderEdges.LEFT.value]
-                        tiles_with_left_str = self._edge_lookup[left_border_str]
-                        if len(tiles_with_left_str) == 1:
-                            break
-                        else:
-                            matching_tile.rotate()
+                    # Orient it so the edge that doesn't match anything is on the left.
+                    # If we're on the last row, there will be two edges that don't match
+                    # anything, so we handle that specially.
+                    if y != self._tiles_per_side - 1:
+                        while True:
+                            left_border_str = matching_tile.borders[BorderEdges.LEFT.value]
+                            tiles_with_left_str = self._edge_lookup[left_border_str]
+                            if len(tiles_with_left_str) == 1:
+                                break
+                            else:
+                                matching_tile.rotate()
 
-                    # Now you still might need to flip it, if the top edge of the new tile
-                    # is backward relative to the tile above. If so, we flip it along the
-                    # vertical axis, putting the outer edge on the inside, then rotate twice.
-                    if matching_tile.borders[BorderEdges.TOP.value] != target_border_str:
-                        matching_tile.flip()
-                        matching_tile.rotate(2)
+                        # Now you still might need to flip it, if the top edge of the new tile
+                        # is backward relative to the tile above. If so, we flip it along the
+                        # vertical axis, putting the outer edge on the inside, then rotate twice.
+                        if matching_tile.borders[BorderEdges.TOP.value] != target_border_str:
+                            matching_tile.flip()
+                            matching_tile.rotate(2)
+                    else:
+                        # Bottom left corner. Orient it so that the edge strings that only exist on this
+                        # tile are on the left & bottom.
+                        flips = 0
+                        found = False
+                        while flips <= 1:
+                            rotations = 0
+                            while rotations < 4:
+                                left_border_str = matching_tile.borders[BorderEdges.LEFT.value]
+                                bottom_border_str = matching_tile.borders[BorderEdges.BOTTOM.value]
+                                tiles_with_left_str = self._edge_lookup[left_border_str]
+                                tiles_with_bottom_str = self._edge_lookup[bottom_border_str]
+
+                                if len(tiles_with_left_str) == 1 and len(tiles_with_bottom_str) == 1:
+                                    found = True
+                                    break
+                                else:
+                                    matching_tile.rotate(1)
+                                    rotations = rotations + 1
+                            if found:
+                                break
+                            flips = flips + 1
 
                     self.placed_tiles[(x, y)] = matching_tile_id
                     matching_tile.cement((x, y))
@@ -132,7 +157,10 @@ class Image:
 
                     # Filter the tile above out of the list of matching tiles
                     matching_tile_id = filter(lambda t: t != left_tile_id, matching_tile_ids)
-                    matching_tile_id = list(matching_tile_id)[0]
+                    matching_tile_id_list = list(matching_tile_id)
+                    if len(matching_tile_id_list) > 2:
+                        print('Uh oh. Target string {0} is available in {1} tiles.'.format(target_border_str, len(matching_tile_id_list)))
+                    matching_tile_id = matching_tile_id_list[0]
 
                     # So now we have the tile ID that goes in this position
                     matching_tile = self.tiles[matching_tile_id]
