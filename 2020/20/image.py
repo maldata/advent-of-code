@@ -142,12 +142,12 @@ class Image:
     def print_with_borders(self):
         square_size = 12
         num_lines = 10
-        for i in range(square_size):
-            for k in range(num_lines):
+        for y in range(square_size):
+            for line_idx in range(num_lines):
                 full_line = ''
-                for j in range(square_size):
-                    tile_id = self.placed_tiles[(i, j)]
+                for x in range(square_size):
+                    tile_id = self.placed_tiles[(x, y)]
                     tile = self.tiles[tile_id]
-                    full_line = full_line + tile.lines[k] + ' '
+                    full_line = full_line + tile.lines[line_idx] + ' '
                 print(full_line)
             print()
