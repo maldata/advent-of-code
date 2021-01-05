@@ -36,6 +36,11 @@ def main(tile_file):
     print()
     image.print_with_borders()
 
+    print('Printing the rendered image...')
+    print()
+    print()
+    image.print_without_borders()
+
 
 if __name__ == '__main__':
     # main('./test-input1.txt')

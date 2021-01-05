@@ -161,11 +161,15 @@ class Image:
         num_lines = 10
         for y in range(square_size):
             for line_idx in range(num_lines):
+                # Skip the first and last lines of each tile (top & bottom borders)
+                if line_idx == 0 or line_idx == (num_lines - 1):
+                    continue
+
                 full_line = ''
                 for x in range(square_size):
                     tile_id = self.placed_tiles[(x, y)]
                     tile = self.tiles[tile_id]
-                    full_line = full_line + tile.lines[line_idx]
+                    full_line = full_line + tile.lines[line_idx][1:num_lines - 1]
                 all_lines.append(full_line)
 
         return all_lines
