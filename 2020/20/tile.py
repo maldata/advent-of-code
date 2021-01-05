@@ -78,3 +78,27 @@ class Tile:
     def print_tile(self):
         for line in self.lines:
             print(line)
+
+    def orient_edge(self, edge_string, border_edge):
+        """
+        Orient the tile so that the given edge_string is on the given border_edge. If the
+        edge_string is not in the tile's border strings, return False. If the requested orientation
+        can be achieved, return True.
+        """
+        rev_edge_string = edge_string[::-1]
+        if edge_string not in self.borders and rev_edge_string not in self.borders:
+            return False
+
+        # There's probably a slick way to figure out what rotations/flip is necessary
+        # to get the edge oriented correctly, but... we'll brute-force it.
+        num_rotations = 0
+        while num_rotations < 8:
+            # Once we've rotated 4 times, flip it before doing any more rotations.
+            if num_rotations == 4:
+                self.flip()
+            
+            if edge_string == self.borders[border_edge.value]:
+                return True
+            else:
+                self.rotate()
+                num_rotations = num_rotations + 1
