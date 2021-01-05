@@ -101,47 +101,12 @@ class Image:
                     # So now we have the tile ID that goes in this position
                     matching_tile = self.tiles[matching_tile_id]
 
-                    # Orient it so the edge that doesn't match anything is on the left.
-                    # If we're on the last row, there will be two edges that don't match
-                    # anything, so we handle that specially.
-                    if y != self._tiles_per_side - 1:
-                        while True:
-                            left_border_str = matching_tile.borders[BorderEdges.LEFT.value]
-                            tiles_with_left_str = self._edge_lookup[left_border_str]
-                            if len(tiles_with_left_str) == 1:
-                                break
-                            else:
-                                matching_tile.rotate()
-
-                        # Now you still might need to flip it, if the top edge of the new tile
-                        # is backward relative to the tile above. If so, we flip it along the
-                        # vertical axis, putting the outer edge on the inside, then rotate twice.
-                        if matching_tile.borders[BorderEdges.TOP.value] != target_border_str:
-                            matching_tile.flip()
-                            matching_tile.rotate(2)
-                    else:
-                        # Bottom left corner. Orient it so that the edge strings that only exist on this
-                        # tile are on the left & bottom.
-                        flips = 0
-                        found = False
-                        while flips <= 1:
-                            rotations = 0
-                            while rotations < 4:
-                                left_border_str = matching_tile.borders[BorderEdges.LEFT.value]
-                                bottom_border_str = matching_tile.borders[BorderEdges.BOTTOM.value]
-                                tiles_with_left_str = self._edge_lookup[left_border_str]
-                                tiles_with_bottom_str = self._edge_lookup[bottom_border_str]
-
-                                if len(tiles_with_left_str) == 1 and len(tiles_with_bottom_str) == 1:
-                                    found = True
-                                    break
-                                else:
-                                    matching_tile.rotate(1)
-                                    rotations = rotations + 1
-                            if found:
-                                break
-                            flips = flips + 1
-
+                    # Orient it to match the tile above
+                    oriented_ok = matching_tile.orient_edge(target_border_str, BorderEdges.TOP)
+                    if not oriented_ok:
+                        print('Was not able to orient tile {0} so that string {1} was on top.'.format(matching_tile_id, target_border_str))
+                        return
+                    
                     self.placed_tiles[(x, y)] = matching_tile_id
                     matching_tile.cement((x, y))
                 else:
@@ -166,16 +131,11 @@ class Image:
                     matching_tile = self.tiles[matching_tile_id]
 
                     # Orient it so the target_border_str is on the left
-                    while True:
-                        if matching_tile.borders[BorderEdges.LEFT.value] == target_border_str:
-                            break
-                        elif matching_tile.borders[BorderEdges.LEFT.value][::-1] == target_border_str:
-                            matching_tile.flip()
-                            matching_tile.rotate(2)
-                            break
-                        else:
-                            matching_tile.rotate()
-
+                    oriented_ok = matching_tile.orient_edge(target_border_str, BorderEdges.LEFT)
+                    if not oriented_ok:
+                        print('Was not able to orient tile {0} so that string {1} was on the left.'.format(matching_tile_id, target_border_str))
+                        return
+                    
                     self.placed_tiles[(x, y)] = matching_tile_id
                     matching_tile.cement((x, y))
 
