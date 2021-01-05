@@ -151,3 +151,26 @@ class Image:
                     full_line = full_line + tile.lines[line_idx] + ' '
                 print(full_line)
             print()
+
+    def render(self):
+        """
+        Render the image to a list of strings without the borders.
+        """
+        all_lines = []
+        square_size = 12
+        num_lines = 10
+        for y in range(square_size):
+            for line_idx in range(num_lines):
+                full_line = ''
+                for x in range(square_size):
+                    tile_id = self.placed_tiles[(x, y)]
+                    tile = self.tiles[tile_id]
+                    full_line = full_line + tile.lines[line_idx]
+                all_lines.append(full_line)
+
+        return all_lines
+
+    def print_without_borders(self):
+        all_lines = self.render()
+        for line in all_lines:
+            print(line)
