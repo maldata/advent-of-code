@@ -4,6 +4,19 @@ from tile import Tile
 from image import Image
 
 
+def rotate_image(image_lines):
+    rotated = []
+    for i in range(len(image_lines)):
+        new_line = ''.join([line[i] for line in image_lines])
+        rotated.append(new_line[::-1])
+
+    return rotated
+
+
+def flip_image(image_lines):
+    return [line[::-1] for line in image_lines]
+
+
 def main(tile_file):
     print('Reading data...')
     with open(tile_file, 'r') as f:
@@ -31,16 +44,48 @@ def main(tile_file):
     image = Image(tiles)
     image.place_tiles()
 
-    print('Printing the full image...')
-    print()
-    print()
-    image.print_with_borders()
+    print('Finished assembling the image. Rendering...')
+    rendered_image = image.render()
 
-    print('Printing the rendered image...')
-    print()
-    print()
-    image.print_without_borders()
+    side_length = len(rendered_image)
+    print('Image is {0} x {0}'.format(side_length))
 
+    sea_monster = ['                  # ',
+                   '#    ##    ##    ###',
+                   ' #  #  #  #  #  #   ']
+    sea_monster = [s.replace(' ', '.') for s in sea_monster]
+    
+    sea_monster_len = len(sea_monster[0])
+
+    # Construct the regex for finding sea monsters
+    num_padding_chars = side_length - sea_monster_len
+    padding = '.' * num_padding_chars
+    sea_monster_regex = padding.join(sea_monster)
+    sea_monster_num_hashes = sea_monster_regex.count('#')
+
+    # Rotate the image and count the sea monsters in each orientation
+    for orientation in range(8):
+        num_monsters = 0
+        if orientation == 4:
+            rendered_image = flip_image(rendered_image)
+            
+        flattened_image = ''.join(rendered_image)
+        r = re.findall(sea_monster_regex, flattened_image)
+        num_monsters = len(r)
+
+        if num_monsters != 0:
+            break
+        
+        rendered_image = rotate_image(rendered_image)
+
+    print('Found {0} sea monsters!'.format(num_monsters))
+
+    image_num_hashes = flattened_image.count('#')
+    print('There are {0} hashes in the image'.format(image_num_hashes))
+    sea_roughness = image_num_hashes - (num_monsters * sea_monster_num_hashes)
+
+    print('Sea roughness: {0}'.format(sea_roughness))
+        
 
 if __name__ == '__main__':
     # main('./test-input1.txt')
