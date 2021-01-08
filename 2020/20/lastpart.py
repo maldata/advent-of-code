@@ -34,7 +34,7 @@ def main():
     # Construct the regex for finding sea monsters
     num_padding_chars = side_length - sea_monster_len
     padding = '.' * num_padding_chars
-    sea_monster_regex = sea_monster[0] + padding + sea_monster[1] + padding + sea_monster[2]
+    sea_monster_regex = padding.join(sea_monster)
     sea_monster_num_hashes = sea_monster_regex.count('#')
 
     # Rotate the image and count the sea monsters in each orientation
@@ -53,9 +53,32 @@ def main():
         image = rotate(image)
 
     print('Found {0} sea monsters!'.format(num_monsters))
+    substr_start = 0
+    edge_monsters = 0
+    for monster_idx in range(num_monsters):
+        r = re.search(sea_monster_regex, flattened_image[substr_start:])
+        print(r)
+        print(r.group(0))
+        span = r.span()
+        span_start = span[0]
+        span_end = span[1]
+        
+        global_start = span_start + substr_start
+        print(global_start)
+        
+        substr_start = substr_start + span_end
+        x_pos = global_start % side_length
+        
+        print('Monster {0} starts at {1}'.format(monster_idx, span_start))
+        print('x pos: {0}'.format(x_pos))
+
+        if x_pos > (side_length - sea_monster_len):
+            edge_monsters = edge_monsters + 1
 
     image_num_hashes = flattened_image.count('#')
-    sea_roughness = image_num_hashes - (num_monsters * sea_monster_num_hashes)
+    unbroken_monsters = num_monsters - edge_monsters
+    print('{0} + {1} = {2}'.format(unbroken_monsters, edge_monsters, num_monsters))
+    sea_roughness = image_num_hashes - (unbroken_monsters * sea_monster_num_hashes)
 
     print('Sea roughness: {0}'.format(sea_roughness))
         
