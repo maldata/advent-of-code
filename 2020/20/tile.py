@@ -51,9 +51,6 @@ class Tile:
         self.lines = [line[::-1] for line in self.lines]
 
     def cement(self, pos):
-        print()
-        print('Cementing tile ID {0} at position {1}'.format(self.id, pos))
-        self.print_tile()
         self._cemented_pos = pos
 
     def num_shared_borders(self, other_tile):

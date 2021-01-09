@@ -17,6 +17,24 @@ def flip_image(image_lines):
     return [line[::-1] for line in image_lines]
 
 
+def highlight_sea_monster(flat_img, sea_monster_regex, start_idx):
+    exploded_monster = [i for i in sea_monster_regex]
+    hash_offsets = [i for (i, j) in enumerate(exploded_monster) if j == '#']
+    
+    exploded_img = [i for i in flat_img]
+
+    for offset in hash_offsets:
+        exploded_img[offset + start_idx] = 'O'
+
+    return ''.join(exploded_img)
+
+
+def print_flattened_image(flat_img, side_length):
+    for line_num in range(side_length):
+        start_idx = line_num * side_length
+        print(flat_img[start_idx:start_idx + side_length])
+
+
 def main(tile_file):
     print('Reading data...')
     with open(tile_file, 'r') as f:
@@ -61,29 +79,36 @@ def main(tile_file):
     num_padding_chars = side_length - sea_monster_len
     padding = '.' * num_padding_chars
     sea_monster_regex = padding.join(sea_monster)
-    sea_monster_num_hashes = sea_monster_regex.count('#')
 
-    # Rotate the image and count the sea monsters in each orientation
+    # Rotate/flip the image until we find one sea monster
     for orientation in range(8):
-        num_monsters = 0
         if orientation == 4:
             rendered_image = flip_image(rendered_image)
             
         flattened_image = ''.join(rendered_image)
         r = re.findall(sea_monster_regex, flattened_image)
-        num_monsters = len(r)
-
-        if num_monsters != 0:
+        if r:
             break
         
         rendered_image = rotate_image(rendered_image)
 
-    print('Found {0} sea monsters!'.format(num_monsters))
+    print('The image is now correctly oriented.')
 
-    image_num_hashes = flattened_image.count('#')
-    print('There are {0} hashes in the image'.format(image_num_hashes))
-    sea_roughness = image_num_hashes - (num_monsters * sea_monster_num_hashes)
+    num_monsters = 0
+    while True:
+        r = re.search(sea_monster_regex, flattened_image)
+        if r is None:
+            break
+        
+        span = r.span()
+        span_start = span[0]
+        span_end = span[1]
+        num_monsters = num_monsters + 1
+        flattened_image = highlight_sea_monster(flattened_image, sea_monster_regex, span_start)
 
+    print_flattened_image(flattened_image, side_length)
+    sea_roughness = flattened_image.count('#')
+    print('Sea monsters: {0}'.format(num_monsters))
     print('Sea roughness: {0}'.format(sea_roughness))
         
 

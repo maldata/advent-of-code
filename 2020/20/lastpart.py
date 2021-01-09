@@ -15,6 +15,21 @@ def flip(image_lines):
     return [line[::-1] for line in image_lines]
 
 
+def highlight_sea_monster(flat_img, offsets, start_idx):
+    exploded = [i for i in flat_img]
+
+    for offset in offsets:
+        exploded[offset + start_idx] = 'O'
+
+    return ''.join(exploded)
+
+
+def print_flattened_image(flat_img, side_length):
+    for line_num in range(side_length):
+        start_idx = line_num * side_length
+        print(flat_img[start_idx:start_idx + side_length])
+
+
 def main():
     with open('rendered-image.txt', 'r') as f:
         all_lines = f.readlines()
@@ -36,50 +51,40 @@ def main():
     padding = '.' * num_padding_chars
     sea_monster_regex = padding.join(sea_monster)
     sea_monster_num_hashes = sea_monster_regex.count('#')
-
+    
+    exploded = [i for i in sea_monster_regex]
+    hash_offsets = [i for (i, j) in enumerate(exploded) if j == '#']
+    
     # Rotate the image and count the sea monsters in each orientation
     for orientation in range(8):
-        num_monsters = 0
         if orientation == 4:
             image = flip(image)
             
         flattened_image = ''.join(image)
-        r = re.findall(sea_monster_regex, flattened_image)
-        num_monsters = len(r)
+        r = re.search(sea_monster_regex, flattened_image)
 
-        if num_monsters != 0:
+        if r:
             break
         
         image = rotate(image)
 
-    print('Found {0} sea monsters!'.format(num_monsters))
-    substr_start = 0
-    edge_monsters = 0
-    for monster_idx in range(num_monsters):
-        r = re.search(sea_monster_regex, flattened_image[substr_start:])
-        print(r)
-        print(r.group(0))
+    print('The image is now correctly oriented.')
+    
+    num_monsters = 0
+    while True:
+        r = re.search(sea_monster_regex, flattened_image)
+        if r is None:
+            break
+        
         span = r.span()
         span_start = span[0]
         span_end = span[1]
-        
-        global_start = span_start + substr_start
-        print(global_start)
-        
-        substr_start = substr_start + span_end
-        x_pos = global_start % side_length
-        
-        print('Monster {0} starts at {1}'.format(monster_idx, span_start))
-        print('x pos: {0}'.format(x_pos))
+        num_monsters = num_monsters + 1
+        flattened_image = highlight_sea_monster(flattened_image, hash_offsets, span_start)
 
-        if x_pos > (side_length - sea_monster_len):
-            edge_monsters = edge_monsters + 1
-
-    image_num_hashes = flattened_image.count('#')
-    unbroken_monsters = num_monsters - edge_monsters
-    print('{0} + {1} = {2}'.format(unbroken_monsters, edge_monsters, num_monsters))
-    sea_roughness = image_num_hashes - (unbroken_monsters * sea_monster_num_hashes)
-
+    print_flattened_image(flattened_image, side_length)
+    sea_roughness = flattened_image.count('#')
+    print('Sea monsters: {0}'.format(num_monsters))
     print('Sea roughness: {0}'.format(sea_roughness))
         
     

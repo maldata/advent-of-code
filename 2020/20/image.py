@@ -87,16 +87,13 @@ class Image:
 
                     # bottom string of above tile... this is what we search for
                     target_border_str = tile_above.borders[BorderEdges.BOTTOM.value]
-                    print('Tile above ({0}) has bottom border {1}'.format(tile_above_id, target_border_str))
 
                     # Get all tiles with that string
                     matching_tile_ids = self._edge_lookup[target_border_str]
-                    print('Tiles with that string: {0}'.format(matching_tile_ids))
 
                     # Filter the tile above out of the list of matching tiles
                     matching_tile_id = filter(lambda t: t != tile_above_id, matching_tile_ids)
                     matching_tile_id = list(matching_tile_id)[0]
-                    print('Picked {0}'.format(matching_tile_id))
 
                     # So now we have the tile ID that goes in this position
                     matching_tile = self.tiles[matching_tile_id]
