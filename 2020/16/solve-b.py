@@ -1,33 +1,8 @@
 #!/usr/bin/env python3
 import re
 
+from rule import Rule
 
-class Rule:
-    def __init__(self, name, range1_lo, range1_hi, range2_lo, range2_hi):
-        self.name = name
-        self.range1_lo = int(range1_lo)
-        self.range1_hi = int(range1_hi)
-        self.range2_lo = int(range2_lo)
-        self.range2_hi = int(range2_hi)
-
-    def get_invalid_fields(self, ticket):
-        invalid_fields = []
-        for field in ticket:
-            if self.range1_lo <= field <= self.range1_hi or \
-               self.range2_lo <= field <= self.range2_hi:
-                continue
-            else:
-                invalid_fields.append(field)
-
-        return invalid_fields
-
-    def all_values_pass(self, field_samples):
-        results = [self.range1_lo <= field <= self.range1_hi or self.range2_lo <= field <= self.range2_hi for field in field_samples]
-        f = filter(lambda x: x[1] == False, enumerate(results))
-        false_idxs = [field_samples[i[0]] for i in f]
-        print('Failed in {0} ({1} - {2} OR {3} - {4}): {5}'.format(self.name, self.range1_lo, self.range1_hi, self.range2_lo, self.range2_hi, false_idxs))
-        return all(results)
-    
 
 def read_sample_tickets():
     with open('./sample-tickets.txt', 'r') as f:
@@ -49,21 +24,13 @@ def read_rules():
     with open('./rules.txt', 'r') as f:
         all_lines = f.readlines()
 
-    rules = [i.strip() for i in all_lines]
-    output = []
-    for rule in rules:
-        r = re.search('^(.*): ([0-9]+)-([0-9]+) or ([0-9]+)-([0-9]+)$', rule)
-        if r is None or len(r.groups()) != 5:
-            print('Invalid rule line: {0}'.format(rule))
-
-        name = r.group(1)
-        range1lo = r.group(2)
-        range1hi = r.group(3)
-        range2lo = r.group(4)
-        range2hi = r.group(5)
-        output.append(Rule(name, range1lo, range1hi, range2lo, range2hi))
-
-    return output
+    rule_strs = [i.strip() for i in all_lines]
+    rules = {}
+    for rule_str in rule_strs:
+        r = Rule(rule_str)
+        rules[r.name] = r
+    
+    return rules
 
 
 def ticket_errors(ticket, rule_set):
