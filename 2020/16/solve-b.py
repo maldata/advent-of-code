@@ -33,9 +33,10 @@ def read_rules():
     return rules
 
 
-def ticket_errors(ticket, rule_set):
+def ticket_errors(ticket, rule_dict):
     inv_field_set = None
-    for rule in rule_set:
+    for rule_name in rule_dict:
+        rule = rule_dict[rule_name]
         inv_fields_for_this_rule = set(rule.get_invalid_fields(ticket))
         if inv_field_set is None:
             inv_field_set = inv_fields_for_this_rule
@@ -48,29 +49,40 @@ def ticket_errors(ticket, rule_set):
 def main():
     sample_tickets = read_sample_tickets()
     my_ticket = read_my_ticket()
-    rule_set = read_rules()
+    rule_dict = read_rules()
 
     valid_tickets = []
     for t in sample_tickets:
-        if len(ticket_errors(t, rule_set)) == 0:
+        if len(ticket_errors(t, rule_dict)) == 0:
             valid_tickets.append(t)
 
-    print('Order of fields:')
+    # We now have a list of valid tickets.
+
+    # Transpose the valid_tickets so that instead of each inner list being a ticket,
+    # each inner list is every sample of a single field.
     transposed_fields = list(zip(*valid_tickets))
     field_order = []
     field_lookup = {}
-    for field_list in transposed_fields:
+
+    for samples_of_single_field in transposed_fields:
         print('------------------')
-        print('SAMPLES: {0}'.format(field_list))
-        num_matching_fields = 0
-        matching_fields = []
-        for rule in rule_set:
-            if rule.all_values_pass(field_list):
-                num_matching_fields = num_matching_fields + 1
-                matching_fields.append(rule.name)
-                print(rule.name)
-        field_lookup[num_matching_fields - 1] = matching_fields
-        field_order.append(num_matching_fields)
+        print('SAMPLES: {0}'.format(samples_of_single_field))
+        num_matching_rules = 0
+        matching_rules = []
+        for rule_name in rule_dict:
+            rule = rule_dict[rule_name]
+            if all([rule.is_valid(s) for s in samples_of_single_field]):
+                num_matching_rules = num_matching_rules + 1
+                matching_rules.append(rule_name)
+                print(rule_name)
+
+        if num_matching_rules == 1:
+            matching_rule_name = matching_rules[0]
+            rule = rule_dict[matching_rule_name]
+            rule.cement()
+
+        field_lookup[num_matching_rules - 1] = matching_rules
+        field_order.append(num_matching_rules)
         
     # This could be more clear, but I want to go to bed, so this
     # is what's happening. Examine the output and you'll see where
@@ -89,8 +101,8 @@ def main():
         print('{0} - {1}'.format(ordered_field_names[idx], my_ticket[idx]))
 
     # Quick double-check...
-    for rule in rule_set:
-        rule.get_invalid_fields(my_ticket)
+    for rule_name in rule_dict:
+        rule_name.get_invalid_fields(my_ticket)
 
 
 if __name__ == '__main__':
