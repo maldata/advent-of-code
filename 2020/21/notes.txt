@@ -1,0 +1,41 @@
+mxmxvkd kfcds sqjhc nhms (contains dairy, fish)
+trh fvjkl sbzzf mxmxvkd (contains dairy)
+sqjhc fvjkl (contains soy)
+sqjhc mxmxvkd sbzzf (contains fish)
+
+------------------------------
+
+A B C D (contains 1, 2)
+E F G A (contains 1)
+C F (contains 3)
+C A G (contains 2)
+
+------------------------------
+
+Ingredients: A B C D E F G
+Allergens: 1 2 3
+
+- Each allergen is in exactly one ingredient
+- Each ingredient contains zero or one allergen
+- Even if an allergen isn't listed, an ingredient may contain it
+
+------------------------------
+
+Recipes 1 & 2 both contain ingredient A, and allergen 1.
+So, A must map to 1.
+
+Recipes 1 & 4 both contain ingredients A and C. A already maps to 1,
+so C must map to 2.
+
+Recipes 2 & 3 both contain ingredient F. F maps to 3.
+
+So, ingredients B D E & G can't contain any allergens.
+
+kfcds, nhms, trh, sbzzf
+
+---------------------------------
+
+- Find two recipes that share exactly one unmapped ingredient and one
+  unmapped allergen
+- The shared ingredient maps to the allergen
+- If a recipe contains one unmapped ingredient and one unmapped allergen
