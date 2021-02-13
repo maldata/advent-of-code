@@ -16,3 +16,16 @@ class Recipe:
         self._ingredients = set(ingredients)
         self._allergens = set(allergens)
         
+    def get_ingredients(self):
+        return list(self._ingredients)
+
+    def get_allergens(self):
+        return list(self._allergens)
+
+    def get_unmapped_ingredients(self, ingredient_map):
+        # TODO
+        return []
+    
+    def get_unmapped_allergens(self, allergen_map):
+        # TODO
+        return []
