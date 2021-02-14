@@ -58,12 +58,22 @@ def main():
 
     # We now have a list of valid tickets.
 
-    # Transpose the valid_tickets so that instead of each inner list being a ticket,
-    # each inner list is every sample of a single field.
+    # Transpose the valid_tickets so that instead of each inner list being a
+    # ticket, each inner list is every sample of a single field.
     transposed_fields = list(zip(*valid_tickets))
+    field_index = 0
     field_order = []
     field_lookup = {}
 
+    while True:
+        
+        
+        
+    for rule_name in rule_dict:
+        # If we already found it, skip
+        if rule_name in field_lookup:
+        
+    
     for samples_of_single_field in transposed_fields:
         print('------------------')
         print('SAMPLES: {0}'.format(samples_of_single_field))
@@ -79,10 +89,11 @@ def main():
         if num_matching_rules == 1:
             matching_rule_name = matching_rules[0]
             rule = rule_dict[matching_rule_name]
-            rule.cement()
+            rule.cement(field_index)
 
         field_lookup[num_matching_rules - 1] = matching_rules
         field_order.append(num_matching_rules)
+        field_index = field_index + 1
         
     # This could be more clear, but I want to go to bed, so this
     # is what's happening. Examine the output and you'll see where
