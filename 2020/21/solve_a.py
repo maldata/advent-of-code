@@ -7,31 +7,13 @@ from recipe import Recipe
 
 
 def get_unmapped_ingredients(ingredients, ingredient_map):
-    """
-    Of the ingredients given, pick out the ones that are not yet
-    contained in the given map
-    """
-    # TODO
-    return []
+    f = filter(lambda x: x not in ingredient_map, ingredients)
+    return list(f)
 
 
 def get_unmapped_allergens(allergens, allergen_map):
-    # TODO
-    return []
-
-
-def get_shared_ingredients(r1, r2):
-    i1 = set(r1.get_ingredients())
-    i2 = set(r2.get_ingredients())
-    shared = i1.intersection(i2)
-    return list(shared)
-
-
-def get_shared_allergens(r1, r2):
-    i1 = set(r1.get_allergens())
-    i2 = set(r2.get_allergens())
-    shared = i1.intersection(i2)
-    return list(shared)
+    f = filter(lambda x: x not in allergen_map, allergens)
+    return list(f)
 
 
 def main():
@@ -53,32 +35,35 @@ def main():
     all_ingredients = list(set(all_ingredients))
     all_allergens = list(set(all_allergens))
 
-    print(all_ingredients)
-    print(all_allergens)
-
-    # - Find two recipes that share exactly one unmapped ingredient and one
-    #   unmapped allergen
-    # - The shared ingredient maps to the allergen
-    # - If a recipe contains one unmapped ingredient and one unmapped allergen
     all_combos = list(combinations(recipes, 2))
-    while len(allergen_map) == len(all_allergens):
+    while len(allergen_map) != len(all_allergens):
         for combo in all_combos:
             r1 = combo[0]
             r2 = combo[1]
-            shared_ing = get_shared_ingredients(r1, r2)
-            shared_alg = get_shared_allergens(r1, r2)
+            shared_ing = r1.get_shared_ingredients(r2)
+            shared_alg = r1.get_shared_allergens(r2)
+
+            print()
+            print('shared ing: {0}'.format(shared_ing))
+            print('shared alg: {0}'.format(shared_alg))
+            print()
+            
             unmapped_ing = get_unmapped_ingredients(shared_ing, ingredient_map)
             unmapped_alg = get_unmapped_allergens(shared_alg, allergen_map)
+            
             if len(unmapped_ing) == 1 and len(unmapped_alg) == 1:
                 ingredient_map[unmapped_ing[0]] = unmapped_alg[0]
                 allergen_map[unmapped_alg[0]] = unmapped_ing[0]
+                print('unmapped ingredient / allergen: {0} / {1}'.format(shared_ing, shared_alg))
 
         for recipe in recipes:
-            unmapped_ing = recipe.get_unmapped_ingredients(ingredient_map)
-            unmapped_alg = recipe.get_unmapped_allergens(allergen_map)
+            unmapped_ing = get_unmapped_ingredients(recipe.get_ingredients(), ingredient_map)
+            unmapped_alg = get_unmapped_allergens(recipe.get_allergens(), allergen_map)
+
             if len(unmapped_ing) == 1 and len(unmapped_alg) == 1:
                 ingredient_map[unmapped_ing[0]] = unmapped_alg[0]
                 allergen_map[unmapped_alg[0]] = unmapped_ing[0]
+                print('unmapped ingredient / allergen: {0} / {1}'.format(shared_ing, shared_alg))
 
     print(allergen_map)
 

@@ -22,10 +22,14 @@ class Recipe:
     def get_allergens(self):
         return list(self._allergens)
 
-    def get_unmapped_ingredients(self, ingredient_map):
-        # TODO
-        return []
-    
-    def get_unmapped_allergens(self, allergen_map):
-        # TODO
-        return []
+    def get_shared_ingredients(self, r2):
+        i1 = set(self.get_ingredients())
+        i2 = set(r2.get_ingredients())
+        shared = i1.intersection(i2)
+        return list(shared)
+
+    def get_shared_allergens(self, r2):
+        i1 = set(self.get_allergens())
+        i2 = set(r2.get_allergens())
+        shared = i1.intersection(i2)
+        return list(shared)
