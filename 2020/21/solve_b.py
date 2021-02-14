@@ -1,19 +1,7 @@
 #!/usr/bin/env python3
 import re
 
-from itertools import combinations
-
 from recipe import Recipe
-
-
-def get_unmapped_ingredients(ingredients, ingredient_map):
-    f = filter(lambda x: x not in ingredient_map, ingredients)
-    return list(f)
-
-
-def get_unmapped_allergens(allergens, allergen_map):
-    f = filter(lambda x: x not in allergen_map, allergens)
-    return list(f)
 
 
 def main():
@@ -69,17 +57,18 @@ def main():
                 
             print('--------------------------')
 
-    # Find which ingredients do NOT have allergens
-    ings_with_no_algs = set(all_ingredients) - mapped_ings
-    
-    # Find how many times do those ingredients appear
-    count = 0
-    for ing in ings_with_no_algs:
-        for r in recipes:
-            if ing in r.get_ingredients():
-                count = count + 1
-    print('Non-allergenic ingredients appear {0} times total.'.format(count))
-    
+    print(allergen_map)
+    all_allergens.sort()
+    print(all_allergens)
+    sorted_ings = []
+    for alg in all_allergens:
+        sorted_ings = sorted_ings + [allergen_map[alg]]
+
+    print(sorted_ings)
+
+    canonical_list = ','.join(sorted_ings)
+    print(canonical_list)
+        
 
 if __name__ == '__main__':
     main()
