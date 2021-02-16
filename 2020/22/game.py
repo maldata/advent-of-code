@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 class Game:
     def __init__(self, deck0, deck1):
         self._initial_deck0 = list(deck0)
@@ -25,7 +24,11 @@ class Game:
         # TODO: get the scores based on the current decks
         return (0, 0)
     
-    def play(self):        
+    def play(self):
+        """
+        Given the current deck state, iterate until the game ends,
+        then return the index of the winner.
+        """
         while not self.game_finished():
             # TODO: if the current decks are in the history, return 0.
             round_winner = self.do_one_round()
@@ -46,6 +49,12 @@ class Game:
         return 0 if len(self._deck1) == 0 else 1
 
     def do_one_round(self):
+        """
+        Determine the winner of one round. That is, draw a card from each
+        deck and do a recursive subgame or determine the winner based on
+        the drawn card. This method returns the index of the winner and also
+        puts the drawn cards into the winner's deck.
+        """
         p0 = self._deck0[0]
         p1 = self._deck1[0]
         
@@ -67,4 +76,3 @@ class Game:
                 winner_index = None
                 
         return winner_index
-    
