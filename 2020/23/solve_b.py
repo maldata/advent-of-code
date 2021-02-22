@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from itertools import chain
+
 
 def left_rotate_once(ring_list):
     return ring_list[1:] + [ring_list[0]]
@@ -54,16 +56,27 @@ def do_one_move(ring_list, start_index, lowest_num, highest_num):
     return ring_list, start_index + 1
 
 def main():
-    # cup_ring = [3, 6, 4, 2, 9, 7, 5, 8, 1]
-    cup_ring = [3, 8, 9, 1, 2, 5, 4, 6, 7]
+    cup_ring = [3, 6, 4, 2, 9, 7, 5, 8, 1]
     current_idx = 0
 
     max_label = 1000000
-    cup_ring = cup_ring + list(range(10, max_label + 1))
+    # cup_ring = cup_ring + list(range(10, max_label + 1))
+
+    # Starting on iteration N = 249990
+    group_a = [6,7,4,2,10]
+    groups_of_3 = [[i, i+1, i+2] for i in range(12, 999968+1, 4)]
+    groups_of_3 = list(chain(*groups_of_3))
+    group_b = [5,3,9,1,8]
+    every_fourth = range(11, 999971+1, 4)
+    by_ones = range(999972, 1000000+1)
+    cup_ring = list(by_ones) + group_a + groups_of_3 + group_b + list(every_fourth)
+    
+    print('{0} - {1}'.format(cup_ring[-18:], cup_ring[0:18]))
     
     num_moves = 100
     for i in range(num_moves):
         cup_ring, current_idx = do_one_move(cup_ring, current_idx, 1, max_label)
+        print('{0} - {1}'.format(cup_ring[-18:], cup_ring[0:18]))
 
     # print(cup_ring)
 
