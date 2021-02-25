@@ -89,8 +89,12 @@ def follow_path(start, path):
     return x, y
 
 
+def get_adjacent_tiles(tile):
+    return [follow_path(tile, [dir]) for dir in Direction]
+
+
 def get_num_adjacent_black_tiles(floor, tile):
-    adjacent_tiles = [follow_path(tile, [dir]) for dir in Direction]
+    adjacent_tiles = get_adjacent_tiles(tile)
     num_black = 0
 
     for adj in adjacent_tiles:
@@ -101,11 +105,23 @@ def get_num_adjacent_black_tiles(floor, tile):
 
 
 def next_day(original_floor):
-    # 1. Any black tile with zero or more than 2 black tiles
-    #    immediately adjacent to it is flipped to white.
-    # 2. Any white tile with exactly 2 black tiles immediately
-    #    adjacent to it is flipped to black.
+    """
+    1. Any black tile with zero or more than 2 black tiles immediately adjacent to it is flipped to white.
+    2. Any white tile with exactly 2 black tiles immediately adjacent to it is flipped to black.
+    """
+    # First we make sure we add any adjacent tiles that aren't already in the floor.
+    # The "edge" of the floor isn't really the edge... there are infinite white tiles
+    # out there. We just don't care about them until there are black tiles nearby.
+    tiles_to_add = []
+    for tile in original_floor:
+        if original_floor[tile] == 'b':
+            adjacent_tiles = get_adjacent_tiles(tile)
+            new_tiles = filter(lambda a: a not in original_floor, adjacent_tiles)
+            tiles_to_add = tiles_to_add + list(new_tiles)
 
+    for tile in tiles_to_add:
+        original_floor[tile] = 'w'
+    
     new_floor = {}
     for tile in original_floor:
         num_adj_black = get_num_adjacent_black_tiles(original_floor, tile)
@@ -141,7 +157,9 @@ def main():
             floor[endpoint] = 'b'
 
     # We now have the configuration on day 0.
-    for _ in range(100):
+    num_days = 100
+    for i in range(num_days):
+        print('Flipping tiles for day {0}/{1}...'.format(i, num_days))
         floor = next_day(floor)
 
     num_white = 0
