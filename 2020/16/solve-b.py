@@ -61,50 +61,22 @@ def main():
     # Transpose the valid_tickets so that instead of each inner list being a
     # ticket, each inner list is every sample of a single field.
     transposed_fields = list(zip(*valid_tickets))
-    field_index = 0
-    field_order = []
-    field_lookup = {}
-
-    while True:
-        
-        
-        
-    for rule_name in rule_dict:
-        # If we already found it, skip
-        if rule_name in field_lookup:
-        
+    uncemented_rules = rule_dict
+    cemented_rules = {}
+    num_rules = len(uncemented_rules)
     
-    for samples_of_single_field in transposed_fields:
-        print('------------------')
-        print('SAMPLES: {0}'.format(samples_of_single_field))
-        num_matching_rules = 0
-        matching_rules = []
-        for rule_name in rule_dict:
-            rule = rule_dict[rule_name]
-            if all([rule.is_valid(s) for s in samples_of_single_field]):
-                num_matching_rules = num_matching_rules + 1
-                matching_rules.append(rule_name)
-                print(rule_name)
-
-        if num_matching_rules == 1:
-            matching_rule_name = matching_rules[0]
-            rule = rule_dict[matching_rule_name]
-            rule.cement(field_index)
-
-        field_lookup[num_matching_rules - 1] = matching_rules
-        field_order.append(num_matching_rules)
-        field_index = field_index + 1
+    while len(cemented_rules) < num_rules:
+        for r in uncemented_rules:
+            current_rule = uncemented_rules[r]
+            for field_index in range(len(transposed_fields)):
+                valid_values = [current_rule.is_valid(i) for i in transposed_fields[field_index]]
+                if all(valid_values):
+                    current_rule.cement(field_index)
+                    cemented_rules[r] = current_rule
+                    uncemented_rules.pop(r, None)
         
-    # This could be more clear, but I want to go to bed, so this
-    # is what's happening. Examine the output and you'll see where
-    # this comes from.
-    ordered_field_names = []
-    for idx in range(len(my_ticket)):
-        possible_fields = field_lookup[idx]
-        for pf in possible_fields:
-            if pf not in ordered_field_names:
-                ordered_field_names.append(pf)
-
+    print('START HERE, MARK!')    
+    
     print()
     print('MY TICKET:')
     print(my_ticket)

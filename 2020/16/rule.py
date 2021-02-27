@@ -29,15 +29,22 @@ class Rule:
             (self._range2lo <= value <= self._range2hi)
 
     def get_valid_fields(self, ticket):
-        """ Returns a list of indices of fields in the given ticket that ARE valid for this rule. """
+        """
+        Returns a list of indices of fields in the given
+        ticket that ARE valid for this rule.
+        """
         return [i for i in range(len(ticket)) if self.is_valid(ticket[i])]
 
     def get_invalid_fields(self, ticket):
-        """ Returns a list of indices of fields in the given ticket that ARE NOT valid for this rule. """
+        """ 
+        Returns a list of indices of fields in the given 
+        ticket that ARE NOT valid for this rule.
+        """
         return [i for i in range(len(ticket)) if not self.is_valid(ticket[i])]
 
     def cement(self, field):
         if self._cemented_field is None:
             self._cemented_field = field
         else:
-            print('This rule ({0}) is already associated with field {1}'.format(self.name, self._cemented_field))
+            msg_template = 'This rule ({0}) is already associated with field {1}'
+            print(msg_template.format(self.name, self._cemented_field))
