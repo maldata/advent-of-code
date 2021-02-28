@@ -23,6 +23,10 @@ class Rule:
     def cemented_field(self):
         return self._cemented_field
 
+    @property
+    def is_cemented(self):
+        return self._cemented_field is not None
+
     def is_valid(self, value):
         """ Checks if a single integer is valid for this rule """
         return (self._range1lo <= value <= self._range1hi) or \
@@ -48,3 +52,7 @@ class Rule:
         else:
             msg_template = 'This rule ({0}) is already associated with field {1}'
             print(msg_template.format(self.name, self._cemented_field))
+
+    def all_samples_valid(self, samples):
+        valid = [self.is_valid(s) for s in samples]
+        return all(valid)
