@@ -2,19 +2,8 @@
 
 class Aoc.Day1 : GLib.Object
 {
-    public void do_part_a()
+    private List<int> read_input_file()
     {
-	var list = this.read_input_file();
-	foreach(var l in list)
-	{
-	    stdout.printf("%d\n", l);
-        }
-    }
-    
-    public List<int> read_input_file()
-    {
-	stdout.printf("Inside part a:\n");
-
 	FileStream stream = FileStream.open("./input.txt", "r");
 	assert (stream != null);
 
@@ -29,9 +18,61 @@ class Aoc.Day1 : GLib.Object
 	return list;
     }
     
+    public void do_part_a()
+    {
+	var list = this.read_input_file();
+	var found = false;
+	var complement = 0;
+	var diff = 0;
+	foreach(var l in list)
+	{
+	    complement = 2020 - l;
+	    if (list.index(complement) >=0)
+	    {
+		found = true;
+		diff = l;
+		break;
+	    }
+        }
+
+	if (!found)
+	{
+	    stdout.printf("Something went horribly wrong!\n");
+	}
+	else
+	{
+	    stdout.printf("%d * %d = %d\n", diff, complement, diff * complement);
+	}
+    }
+
+    private void find_pair(List<int> list, int target, out int? a, out int? b, out bool found)
+    {
+	found = false;
+	a = null;
+	b = null;
+	if (list.length() == 0)
+	    return;
+
+	foreach(var l in list)
+	{
+	    var complement = target - l;
+	    if (list.index(complement) >=0)
+	    {
+		a = l;
+		b = complement;
+		found = true;
+	    }
+	}
+    }
+    
     public void do_part_b()
     {
-	stdout.printf("Inside part b:\n");
+	var list = this.read_input_file();
+	var triplet_found = false;
+	foreach(var l in list)
+	{
+	    var remainder = 2020 - l;
+        }
     }
 }
 
