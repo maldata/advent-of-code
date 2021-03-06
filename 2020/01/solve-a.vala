@@ -45,18 +45,26 @@ class Aoc.Day1 : GLib.Object
 	}
     }
 
-    private void find_pair(List<int> list, int target, out int? a, out int? b, out bool found)
+    private List<int> smaller_values(int threshold, List<int> all_values)
     {
-	found = false;
-	a = null;
-	b = null;
+	var smaller = new List<int>();
+	foreach(var v in all_values)
+	{
+	    if (v < threshold)
+		smaller.append(v);
+	}
+	return smaller;
+    }
+    
+    private void find_pair(List<int> list, int target, out int a, out int b, out bool found)
+    {
 	if (list.length() == 0)
 	    return;
 
 	foreach(var l in list)
 	{
 	    var complement = target - l;
-	    if (list.index(complement) >=0)
+	    if (list.index(complement) >= 0)
 	    {
 		a = l;
 		b = complement;
@@ -69,10 +77,29 @@ class Aoc.Day1 : GLib.Object
     {
 	var list = this.read_input_file();
 	var triplet_found = false;
+
 	foreach(var l in list)
 	{
 	    var remainder = 2020 - l;
+	    var smaller = this.smaller_values(remainder, list);   
+	    
+	    int a = 0;
+	    int b = 0;
+	    bool found = false;
+	    this.find_pair(smaller, remainder, out a, out b, out found);
+
+	    if (found)
+	    {
+		stdout.printf("%d + %d + %d = %d\n", a, b, l, a + b + l);
+		stdout.printf("%d * %d * %d = %d\n", a, b, l, a * b * l);
+		triplet_found = true;
+		break;
+	    }
+	    
         }
+	
+	if (!triplet_found)
+	    stdout.printf("Something went horribly wrong.\n");
     }
 }
 
