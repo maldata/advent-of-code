@@ -12,10 +12,6 @@ class Aoc.Day03
 	while ((line = stream.read_line()) != null)
 	{
 	    var stripped = line.strip();
-	    if (stripped.length == 0)
-	    {
-		stdout.printf("Glarg");
-	    }
 	    list.append(stripped);
 	}
 	
