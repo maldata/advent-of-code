@@ -50,79 +50,99 @@ public class Aoc.Passport : HashTable<string, string>
 	return this.year_ok("eyr", 2020, 2030);
     }
 
-    // TODO:
     private bool height_ok()
     {
-	/*
-    if 'hgt' not in pp:
-        return False
-    
-    hgt = pp['hgt']
+	string? value = this.get("hgt");
+	if (value == null)
+	    return false;
 
-    # Needs units, either 'cm' or 'in'. If there are fewer than 3 characters,
-    # then we can't have both a number and a unit, so fail.
-    if len(hgt) < 3:
-        return False
+	// Needs units, either 'cm' or 'in'. If there are fewer than 3 
+	// characters, then we can't have both a number and a unit, so fail.
+	if (value.length < 3)
+	    return false;
 
-    unit = hgt[-2:]
-    if unit == 'cm':
-        low = 150
-        high = 193
-    elif unit == 'in':
-        low = 59
-        high = 76
-    else:
-        # Not a valid unit
-        return False
+	int low = 0;
+	int high = 0;
+	if (value.strip().has_suffix("cm"))
+	{
+	    low = 150;
+	    high = 193;
+	}
+	else if (value.strip().has_suffix("in"))
+	{
+	    low = 59;
+	    high = 76;
+	}
+	else
+	{
+	    return false;
+	}
 
-    meas_str = hgt[:-2]
-    try:
-        meas = int(meas_str)
-    except ValueError:
-        return False
-    
-    return meas >= low and meas <= high
-	 */
-	return true;
+	var meas = int.parse(value);
+	return (meas >= low && meas <= high);
     }
 
-    // TODO:
     private bool hair_color_ok()
     {
-	/*
-    if 'hcl' not in pp:
-        return False
+	string? value = this.get("hcl");
+	if (value == null)
+	    return false;
 
-    result = re.match('\#[0-9a-f]{6}', pp['hcl'])
-    return result is not None
-	 */
-	return true;
+	GLib.Regex exp = /^#[0-9a-f]{6}$/;
+	GLib.MatchInfo m;
+	
+	try
+	{
+	    exp.match(value, 0, out m);
+	}
+	catch (GLib.Error e)
+	{
+	    GLib.error("Regex failed: %s", e.message);
+	}
+	
+	return m.matches();
     }
 
-    // TODO:
     private bool eye_color_ok()
     {
-	/*
-	  if 'ecl' not in pp:
-        return False
+	string? value = this.get("ecl");
+	if (value == null)
+	    return false;
 
-    ecl = pp['ecl']
-    return ecl in ['amb', 'blu', 'brn', 'gry', 'grn', 'hzl', 'oth']
-	 */
-	return true;
+	GLib.Regex exp = /(amb|blu|brn|gry|grn|hzl|oth)/;
+	GLib.MatchInfo m;
+
+	try
+	{
+	    exp.match(value, 0, out m);
+	}
+	catch (GLib.Error e)
+	{
+	    GLib.error("Regex failed: %s", e.message);
+	}
+	
+	return m.matches();
     }
 
-    // TODO:
     private bool passport_id_ok()
     {
-	/*
-    if 'pid' not in pp:
-        return False
+	string? value = this.get("pid");
+	if (value == null)
+	    return false;
 
-    result = re.match('^[0-9]{9}$', pp['pid'])
-    return result is not None
-	 */
-	return true;
+	GLib.Regex exp = /^[0-9]{9}$/;
+	GLib.MatchInfo m;
+   
+	try
+	{
+	    exp.match(value, 0, out m);
+	}
+	catch (GLib.Error e)
+	{
+	    GLib.error("Regex failed: %s", e.message);
+	}
+	
+	return m.matches();
     }
     
     public bool is_valid()
