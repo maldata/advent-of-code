@@ -90,15 +90,7 @@ public class Aoc.Passport : HashTable<string, string>
 
 	GLib.Regex exp = /^#[0-9a-f]{6}$/;
 	GLib.MatchInfo m;
-	
-	try
-	{
-	    exp.match(value, 0, out m);
-	}
-	catch (GLib.Error e)
-	{
-	    GLib.error("Regex failed: %s", e.message);
-	}
+	exp.match(value, 0, out m);
 	
 	return m.matches();
     }
@@ -111,15 +103,7 @@ public class Aoc.Passport : HashTable<string, string>
 
 	GLib.Regex exp = /(amb|blu|brn|gry|grn|hzl|oth)/;
 	GLib.MatchInfo m;
-
-	try
-	{
-	    exp.match(value, 0, out m);
-	}
-	catch (GLib.Error e)
-	{
-	    GLib.error("Regex failed: %s", e.message);
-	}
+	exp.match(value, 0, out m);
 	
 	return m.matches();
     }
@@ -132,15 +116,7 @@ public class Aoc.Passport : HashTable<string, string>
 
 	GLib.Regex exp = /^[0-9]{9}$/;
 	GLib.MatchInfo m;
-   
-	try
-	{
-	    exp.match(value, 0, out m);
-	}
-	catch (GLib.Error e)
-	{
-	    GLib.error("Regex failed: %s", e.message);
-	}
+	exp.match(value, 0, out m);
 	
 	return m.matches();
     }
