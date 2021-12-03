@@ -1,38 +1,39 @@
 // valac --pkg glib-2.0 solutions.vala
 
-public static List<int> read_depths()
+public static Array<int> read_depths()
 {
     FileStream stream = FileStream.open("./input.txt", "r");
     assert (stream != null);
 
-    var list = new List<int>();
+    var list = new Array<int>();
     string? line = null;
 
     while ((line = stream.read_line()) != null)
     {
         var stripped = line.strip();
-        list.append(int.parse(stripped));
+        var depth = int.parse(stripped);
+        list.append_val(depth);
     }
 
     return list;
 }
 
-public static void solve_a(List<int> depths)
+public static void solve_a(Array<int> depths)
 {
     var num_increases = 0;
-    for (var i = 1; i < depths.length(); i++)
+    for (var i = 1; i < depths.length; i++)
     {
-        if (depths.nth_data(i) > depths.nth_data(i-1))
+        if (depths.index(i) > depths.index(i-1))
             num_increases++;
     }
 
     stdout.printf("The depth increases %d times.\n", num_increases);
 }
 
-public static void solve_b(List<int> depths, int window_size)
+public static void solve_b(Array<int> depths, int window_size)
 {
-    var num_windows = depths.length() - window_size + 1;
-    var window_sums = new List<int>();
+    var num_windows = depths.length - window_size + 1;
+    var window_sums = new Array<int>();
 
     for (var i = 0; i < num_windows; i++)
     {
@@ -40,10 +41,10 @@ public static void solve_b(List<int> depths, int window_size)
         for (var j = 0; j < window_size; j++)
         {
             var idx = i + j;
-            sum = sum + depths.nth_data(idx);
+            sum = sum + depths.index(idx);
         }
 
-        window_sums.append(sum);
+        window_sums.append_val(sum);
     }
 
     solve_a(window_sums);
