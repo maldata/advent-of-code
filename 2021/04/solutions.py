@@ -15,7 +15,7 @@ class Space:
     
     def set_as_checked(self):
         self._checked = True
-
+    
 
 class Board:
     def __init__(self):
@@ -23,6 +23,8 @@ class Board:
         self._num_rows = 0
         self._num_cols = 0
         self._spaces = {}
+        self._won = False
+        self._number_of_draws_to_win = 0
 
     def add_row(self, text_row):
         self._text_rows.append(text_row)
@@ -41,13 +43,28 @@ class Board:
                 self._spaces[(j, i)] = s
 
     def add_number(self, number):
+        if self._won:
+            return
+
+        self._number_of_draws_to_win = self._number_of_draws_to_win + 1
         for k in self._spaces:
             s = self._spaces[k]
             if s.number == number:
                 s.set_as_checked()
 
     def check_for_win(self):
-        return self.check_horizontals() or self.check_verticals()
+        if self._won:
+            return False
+
+        win_check = self.check_horizontals() or self.check_verticals()
+        if win_check is True:
+            self._won = True
+        return win_check
+
+    def set_draws_to_win(self, draws):
+        if self._won:
+            return
+        self._number_of_draws_to_win = draws
 
     def all_checked(self, coords):
         for coord in coords:
@@ -120,9 +137,23 @@ def solve_a(drawn_numbers, boards):
                 print('Winning board score: {0}'.format(score))
                 return
 
+
+def solve_b(drawn_numbers, boards):
+    for n in drawn_numbers:
+        for b in boards:
+            b.add_number(n)
+            if b.check_for_win():
+                score = b.calculate_score(n)
+                print('A board won with score {0} after calling {1}'.format(score, n))
+
+
 def main():
     drawn_numbers, boards = read_input('./input.txt')
     solve_a(drawn_numbers, boards)
+
+    # Reset the boards so the win state doesn't mess it up
+    drawn_numbers, boards = read_input('./input.txt')
+    solve_b(drawn_numbers, boards)
 
 
 if __name__ == '__main__':
