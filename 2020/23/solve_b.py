@@ -54,14 +54,14 @@ def do_one_move(ring_list, start_index, lowest_num, highest_num):
     return ring_list, start_index + 1
 
 def main():
-    # cup_ring = [3, 6, 4, 2, 9, 7, 5, 8, 1]
-    cup_ring = [3, 8, 9, 1, 2, 5, 4, 6, 7]
+    cup_ring = [3, 6, 4, 2, 9, 7, 5, 8, 1]
+    # cup_ring = [3, 8, 9, 1, 2, 5, 4, 6, 7]
     current_idx = 0
 
     max_label = 1000000
     cup_ring = cup_ring + list(range(10, max_label + 1))
     
-    num_moves = 100
+    num_moves = 10000000
     for i in range(num_moves):
         cup_ring, current_idx = do_one_move(cup_ring, current_idx, 1, max_label)
 
