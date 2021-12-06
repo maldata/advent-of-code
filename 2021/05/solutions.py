@@ -13,7 +13,7 @@ def read_input(file_path):
         
         m = re.match('([0-9]+),([0-9]+) -> ([0-9]+),([0-9]+)', line)
         if m is None:
-            print("A line doesn't match the regex!: ")
+            print("A line doesn't match the regex!: {0}".format(line))
             return
 
         line_definitions.append((int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4))))
