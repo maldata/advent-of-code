@@ -82,14 +82,32 @@ def solve_a(octopi, num_rows, num_cols, num_steps):
     for step in range(num_steps):
         octopi, step_flashes = do_one_step(octopi, num_rows, num_cols)
         num_flashes = num_flashes + step_flashes
-        print_octopi(octopi, num_rows, num_cols)
+        # print_octopi(octopi, num_rows, num_cols)
 
     print('After {0} steps there were {1} flashes'.format(num_steps, num_flashes))
 
 
+def solve_b(octopi, num_rows, num_cols):
+    num_all_flashes = num_rows * num_cols
+    iteration = 0
+    while True:
+        iteration = iteration + 1
+        octopi, step_flashes = do_one_step(octopi, num_rows, num_cols)
+        # print_octopi(octopi, num_rows, num_cols)
+        if step_flashes == num_all_flashes:
+            break
+
+    print('On step {0}, all octopi flash.'.format(iteration))
+
+
 def main():
-    octopi, num_rows, num_cols = read_input('./input.txt')
+    filename = './input.txt'
+    octopi, num_rows, num_cols = read_input(filename)
     solve_a(octopi, num_rows, num_cols, 100)
+
+    # Need to reset the octopic dictionary
+    octopi, num_rows, num_cols = read_input(filename)
+    solve_b(octopi, num_rows, num_cols)
 
 
 if __name__ == '__main__':
