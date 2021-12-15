@@ -1,8 +1,3 @@
-class Octopus:
-    def __init__(self) -> None:
-        self.energy = 0
-
-
 def read_input(file_path):
     with open(file_path, 'r') as f:
         all_lines = f.readlines()
