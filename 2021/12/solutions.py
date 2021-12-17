@@ -41,9 +41,10 @@ def read_input(file_path):
 def get_paths(caves, visited_names, dest_name):
     current_name = visited_names[-1]
     if current_name == dest_name:
-        return visited_names
+        return [visited_names]
 
     current_cave = caves[current_name]
+    forward_paths = []
     for n in current_cave.neighbors:
         c = caves[n]
 
@@ -51,19 +52,27 @@ def get_paths(caves, visited_names, dest_name):
         if not c.big and c.name in visited_names:
             continue
 
-        # If this neighbor is large or hasn't been visited yet, stick it on the
-        # visited list and find a path from there to the destination
-        
-        # TODO: this isn't gonna work... append mutates the shared list...
-        visited_names.append(n)
+        # If this neighbor is large or hasn't been visited yet,
+        # find a path from there to the destination.
+        visited_copy = [v for v in visited_names]
+        visited_copy.append(n)
+        next_paths = get_paths(caves, visited_copy, dest_name)
+        for np in next_paths:
+            forward_paths.append(np)
 
-        # TODO: the return value... what do we do with that?
-        #  maybe we concatenate the visited list to the returned list?
-        p = get_paths(caves, visited_names, dest_name)
-
+    # Now, we take the path we took to get here and stick it on the front of
+    # the paths from our neighbors to the destination, and return it.
+    #output_paths = []
+    #for f in forward_paths:
+    #    path_copy = [v for v in visited_names]
+    #    output_paths.append(path_copy + f)
+    #
+    #return output_paths
+    return forward_paths
 
 def solve_a(caves):
     all_paths = get_paths(caves, ['start'], 'end')
+    print(len(all_paths))
 
 
 def main():
