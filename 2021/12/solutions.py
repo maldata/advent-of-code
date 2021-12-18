@@ -22,7 +22,36 @@ class Cave:
         return True
 
 
-def read_input(file_path):
+class TwiceVisitableCave(Cave):
+    def __init__(self, name):
+        super().__init__(name)
+    
+    def can_be_visited(self, visited_caves):
+        """
+        Allow one small cave to be visited twice
+        """
+        # If it's a big cave, you can always visit it
+        if self.big:
+            return True
+
+        # The start and end caves can only ever be visited once
+        if self.name == 'start' or self.name == 'end':
+            return self.name not in visited_caves
+        
+        # Is there already a small cave that has been visited twice?
+        # If so, then this one can only be visited if it hasn't been visited before.
+        f = filter(lambda x: x == x.lower(), visited_caves)
+        visited_small_caves = list(set(f))
+        times_visited = [visited_caves.count(i) for i in visited_small_caves]
+        any_visited_twice = any([t > 1 for t in times_visited])
+
+        if any_visited_twice:
+            return self.name not in visited_caves
+
+        return True
+
+
+def read_input(file_path, class_name):
     with open(file_path, 'r') as f:
         all_lines = f.readlines()
 
@@ -34,9 +63,9 @@ def read_input(file_path):
         cave2 = r.group(2)
 
         if cave1 not in caves:
-            caves[cave1] = Cave(cave1)
+            caves[cave1] = class_name(cave1)
         if cave2 not in caves:
-            caves[cave2] = Cave(cave2)
+            caves[cave2] = class_name(cave2)
 
         caves[cave1].add_neighbor(cave2)
         caves[cave2].add_neighbor(cave1)
@@ -78,8 +107,10 @@ def solve_b(caves):
 
 
 def main():
-    caves = read_input('./input.txt')
+    caves = read_input('./input.txt', Cave)
     solve_a(caves)
+
+    caves = read_input('./input.txt', TwiceVisitableCave)
     solve_b(caves)
 
 
