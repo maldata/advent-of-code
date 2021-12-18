@@ -12,8 +12,14 @@ class Cave:
         if new_neighbor not in self.neighbors:
             self.neighbors.append(new_neighbor)
     
-    def set_visited(self, visited):
-        self.visited = visited
+    def can_be_visited(self, visited_caves):
+        """
+        If it's a small cave that has already been visited, it can't be visited again
+        """
+        if not self.big and self.name in visited_caves:
+            return False
+        
+        return True
 
 
 def read_input(file_path):
@@ -44,12 +50,11 @@ def get_paths(caves, visited_names, dest_name):
         return [visited_names]
 
     current_cave = caves[current_name]
-    forward_paths = []
+    output_paths = []
     for n in current_cave.neighbors:
         c = caves[n]
 
-        # If this neighbor is a small cave that has already been visited, skip it
-        if not c.big and c.name in visited_names:
+        if not c.can_be_visited(visited_names):
             continue
 
         # If this neighbor is large or hasn't been visited yet,
@@ -58,19 +63,16 @@ def get_paths(caves, visited_names, dest_name):
         visited_copy.append(n)
         next_paths = get_paths(caves, visited_copy, dest_name)
         for np in next_paths:
-            forward_paths.append(np)
+            output_paths.append(np)
 
-    # Now, we take the path we took to get here and stick it on the front of
-    # the paths from our neighbors to the destination, and return it.
-    #output_paths = []
-    #for f in forward_paths:
-    #    path_copy = [v for v in visited_names]
-    #    output_paths.append(path_copy + f)
-    #
-    #return output_paths
-    return forward_paths
+    return output_paths
 
 def solve_a(caves):
+    all_paths = get_paths(caves, ['start'], 'end')
+    print(len(all_paths))
+
+
+def solve_b(caves):
     all_paths = get_paths(caves, ['start'], 'end')
     print(len(all_paths))
 
@@ -78,6 +80,7 @@ def solve_a(caves):
 def main():
     caves = read_input('./input.txt')
     solve_a(caves)
+    solve_b(caves)
 
 
 if __name__ == '__main__':
