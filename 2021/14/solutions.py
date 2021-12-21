@@ -66,9 +66,59 @@ def solve_a(template, rules, num_steps):
     print('{0} - {1} = {2}'.format(most_freq[1], least_freq[1], most_freq[1] - least_freq[1]))
 
 
+def do_one_step_b(counts, rules):
+    new_counts = {}
+    for r in rules:
+        pair = r[0]
+        insert = r[1]
+        first_char = pair[0]
+        second_char = pair[1]
+        new_pair1 = first_char + insert
+        new_pair2 = insert + second_char
+
+        # If this pair isn't in the dictionary at all, just move on
+        if pair not in counts or counts[pair] == 0:
+            continue
+
+        # Otherwise, we remove all counts of this pair, and then add as many
+        # counts of the two new pairs
+        num_old_pair = counts[pair]
+        new_counts[pair] = 0
+        if new_pair1 in counts:
+            new_counts[new_pair1] = counts[new_pair1] + num_old_pair
+        else:
+            new_counts[new_pair1] = num_old_pair
+        
+        if new_pair2 in counts:
+            new_counts[new_pair2] = counts[new_pair2] + num_old_pair
+        else:
+            new_counts[new_pair2] = num_old_pair
+
+    return new_counts
+
+def solve_b(template, rules, num_steps):
+    exploded = [t for t in template]
+    pairs = zip(exploded[:-1], exploded[1:])
+
+    counts = {}
+    for p in pairs:
+        string_pair = p[0] + p[1]
+        if string_pair in counts:
+            counts[string_pair] = counts[string_pair] + 1
+        else:
+            counts[string_pair] = 1
+    
+    for step_idx in range(num_steps):
+        counts = do_one_step_b(counts, rules)
+
+    pass
+    
+
+
 def main():
-    template, rules = read_input('./input.txt')
+    template, rules = read_input('./input-test.txt')
     solve_a(template, rules, 10)
+    solve_b(template, rules, 10)
 
 
 if __name__ == '__main__':
