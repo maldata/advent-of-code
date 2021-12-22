@@ -80,17 +80,15 @@ def do_one_step_b(counts, rules):
         if pair not in counts or counts[pair] == 0:
             continue
 
-        # Otherwise, we remove all counts of this pair, and then add as many
-        # counts of the two new pairs
+        # Otherwise, we add that many counts of the two new pairs
         num_old_pair = counts[pair]
-        new_counts[pair] = 0
-        if new_pair1 in counts:
-            new_counts[new_pair1] = counts[new_pair1] + num_old_pair
+        if new_pair1 in new_counts:
+            new_counts[new_pair1] = new_counts[new_pair1] + num_old_pair
         else:
             new_counts[new_pair1] = num_old_pair
         
-        if new_pair2 in counts:
-            new_counts[new_pair2] = counts[new_pair2] + num_old_pair
+        if new_pair2 in new_counts:
+            new_counts[new_pair2] = new_counts[new_pair2] + num_old_pair
         else:
             new_counts[new_pair2] = num_old_pair
 
@@ -111,14 +109,36 @@ def solve_b(template, rules, num_steps):
     for step_idx in range(num_steps):
         counts = do_one_step_b(counts, rules)
 
-    pass
+    letter_counts = {}
+    for letter_pair in counts:
+        num_counts = counts[letter_pair]
+        for letter in letter_pair:
+            if letter in letter_counts:
+                letter_counts[letter] = letter_counts[letter] + num_counts
+            else:
+                letter_counts[letter] = num_counts
     
+    # The first and last letters in the template don't get double-counted
+    # in the pairs, so we'll add one to each, then divide all of them by two.
+    for end in [exploded[0], exploded[-1]]:
+        letter_counts[end] = letter_counts[end] + 1
+    
+    min_letter = None
+    max_letter = None
+    for k in letter_counts:
+        letter_counts[k] = letter_counts[k] // 2
+        if min_letter is None or letter_counts[k] < min_letter:
+            min_letter = letter_counts[k]
+        if max_letter is None or letter_counts[k] > max_letter:
+            max_letter = letter_counts[k]
+
+    print('{0} - {1} = {2}'.format(max_letter, min_letter, max_letter - min_letter))
 
 
 def main():
-    template, rules = read_input('./input-test.txt')
+    template, rules = read_input('./input.txt')
     solve_a(template, rules, 10)
-    solve_b(template, rules, 10)
+    solve_b(template, rules, 40)
 
 
 if __name__ == '__main__':
