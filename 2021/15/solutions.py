@@ -108,9 +108,39 @@ def solve_a(risks, nodes, num_rows, num_cols):
     print(path)
 
 
+def make_map_bigger(risks, factor, num_rows, num_cols):
+    bigger_map = {}
+    bigger_nodes = {}
+    big_grid_coords = [(r, c) for r in range(factor) for c in range(factor)]
+    for big_grid_coord in big_grid_coords:
+        big_grid_row = big_grid_coord[0]
+        big_grid_col = big_grid_coord[1]
+        adder = big_grid_row + big_grid_col
+
+        for k in risks:
+            r = k[0]
+            c = k[1]
+            original_value = risks[k]
+            new_value = (((original_value - 1) + adder) % 9) + 1  # wrap from 9 around to 1 (not 0)
+            new_r = big_grid_row * num_rows + r
+            new_c = big_grid_col * num_cols + c
+
+            bigger_map[(new_r, new_c)] = new_value
+            bigger_nodes[(new_r, new_c)] = Node(new_r, new_c)
+    
+    return bigger_map, bigger_nodes, num_rows * factor, num_cols * factor
+
+
 def main():
+    print('Reading input...')
     risks, nodes, num_rows, num_cols = read_input('./input-test.txt')
+    print('Solving part A...')
     solve_a(risks, nodes, num_rows, num_cols)
+
+    print('Making the larger map...')
+    big_risks, big_nodes, big_num_rows, big_num_cols = make_map_bigger(risks, 5, num_rows, num_cols)
+    print('Solving part B...')
+    solve_a(big_risks, big_nodes, big_num_rows, big_num_cols)
 
 
 if __name__ == '__main__':
