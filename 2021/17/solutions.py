@@ -70,10 +70,10 @@ def solve_a(limits):
 
 def solve_b(limits):
     num_hits = 0
-    velocities = [(x, y) for x in range(0, 70) for y in range(-250, 1750)]
+    velocities = [(x, y) for x in range(0, 70) for y in range(-250, 250)]
     for v in velocities:
         result = simulate(v, limits)
-        if result:
+        if result is not None:
             num_hits = num_hits + 1
     
     print('Found {0} hits'.format(num_hits))
