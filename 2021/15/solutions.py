@@ -133,7 +133,7 @@ def make_map_bigger(risks, factor, num_rows, num_cols):
 
 def main():
     print('Reading input...')
-    risks, nodes, num_rows, num_cols = read_input('./input-test.txt')
+    risks, nodes, num_rows, num_cols = read_input('./input.txt')
     print('Solving part A...')
     solve_a(risks, nodes, num_rows, num_cols)
 
