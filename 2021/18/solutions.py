@@ -58,19 +58,11 @@ class SfNumber:
         
         return mag
 
-
-
     def reduce(self):
-        print('Starting to reduce...')
-        print(self.get_string_repr())
         while True:
             if self.check_explode():
-                print('Exploded')
-                print(self.get_string_repr())
                 continue
             if self.check_split():
-                print('Split')
-                print(self.get_string_repr())
                 continue
             break
     
@@ -192,11 +184,6 @@ class SfNumber:
 
 def add_sfns(sfn1, sfn2):
     result_str = '[' + sfn1.get_string_repr() + ',' + sfn2.get_string_repr() + ']'
-    
-    #result_str = '[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]'
-    #result_str = '[[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]],[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]]'
-    result_str = '[[[[[7,0],[7,7]],[[7,7],[7,8]]],[[[7,7],[8,8]],[[7,7],[8,7]]]],[7,[5,[[3,8],[1,4]]]]]'
-
     result_sfn = SfNumber(result_str)
     result_sfn.reduce()
     return result_sfn
@@ -209,14 +196,29 @@ def read_input(file_path):
     return [SfNumber(line.strip()) for line in all_lines]
 
 
-def main():
-    sfnumbers = read_input('./input.txt')
-    result = sfnumbers[0]
-    for sfn in sfnumbers[1:]:
+def solve_a(sfns):
+    result = sfns[0]
+    for sfn in sfns[1:]:
         result = add_sfns(result, sfn)
-        print(result.get_string_repr())
 
     print('Final magnitude {0}'.format(result.magnitude()))
+
+
+def solve_b(sfns):
+    combos = [(a, b) for a in sfns for b in sfns]
+    mags = []
+    for combo in combos:
+        a = combo[0]
+        b = combo[1]
+        result = add_sfns(a, b)
+        mags.append(result.magnitude())
+
+    print('Largest magnitude of any combination is {0}'.format(max(mags)))
+
+def main():
+    sfnumbers = read_input('./input.txt')
+    solve_a(sfnumbers)
+    solve_b(sfnumbers)
 
 
 if __name__ == '__main__':
