@@ -36,7 +36,10 @@ def rotate(pt, fr, pr):
 
 class Scanner:
     def __init__(self, orig_points) -> None:
+        self.global_position = None
+        self.relative_beacon_pos = orig_points
         self.orientations = []
+        self.locked_orientation_idx = None
 
         # Getting all the orientations is weird. There are 24 ways the axes can be rotated...
         # Think about rolling a 6-sided die. It can land with each of the 6 faces up, and that
@@ -55,6 +58,52 @@ class Scanner:
             for p in plane_rotations:
                 rotated_points = [rotate(pt, f, p) for pt in orig_points]
                 self.orientations.append(rotated_points)
+    
+    def get_overlapping_beacons(self, other):
+        for o in self.orientations:
+            num_overlaps, offset_coords = get_num_overlapping(o, other.relative_beacon_pos)
+            if num_overlaps >= 12:
+                # TODO: lock it in. set the global position and index of the orientation
+                pass
+    
+
+def get_num_overlapping(coords1, coords2):
+    """
+    Given two sets of coordinates, find the offset that maximizes the number
+    of overlapping points (then return the number of overlaps and the offset).
+    """
+    # Set things up so that, of the two lists of coords, there are fewer in c1 than c2
+    c1 = coords1
+    c2 = coords2
+    if len(coords1) > len(coords2):
+        c1 = coords2
+        c2 = coords1
+
+    max_overlaps = 0
+    offset_with_max_overlaps = (0, 0, 0)
+    idx_of_combo_with_max_overlaps = 0
+
+    indices_to_align = [(i,j) for i in range(len(c1)) for j in range(i, len(c2))]
+    for combo in indices_to_align:
+        fixed = c1[combo[0]]
+        mobile = c2[combo[1]]
+
+        # Find the offset between the two aligned points
+        offset = (fixed[0] - mobile[0], fixed[1] - mobile[1], fixed[2] - mobile[2])
+
+        # Move all the "mobile" points by the offset and see if that
+        # shifted position is in the list of "fixed" points
+        overlaps = 0
+        for m in c2:
+            shifted = (m[0] + offset[0], m[1] + offset[1], m[2] + offset[2])
+            if shifted in c1:
+                overlaps = overlaps + 1
+        
+        if overlaps > max_overlaps:
+            max_overlaps = overlaps
+            offset_with_max_overlaps = offset
+
+    return max_overlaps, offset_with_max_overlaps
 
 
 def read_input(file_path):
@@ -81,12 +130,25 @@ def read_input(file_path):
     return all_scanners[1:]
 
 
+def solve_a(scanners):
+    num_scanners = len(scanners)
+    globally_known = [0]
+    globally_unknown = range(1, num_scanners)
+    all_combos = [(i, j) for i in globally_known for j in globally_unknown]
+    for known_idx, unknown_idx in all_combos:
+        known = scanners[known_idx]
+        unknown = scanners[unknown_idx]
+
+        overlapping_beacons = known.get_overlapping_beacons(unknown)
+
+
 def main():
-    all_scanner_coords = read_input('./input-test.txt')
+    all_scanner_coords = read_input('./input.txt')
     all_scanners = []
     for coords in all_scanner_coords:
         all_scanners.append(Scanner(coords))
-    pass
+    all_scanners[0].global_position = (0, 0, 0)    
+    solve_a(all_scanners)
 
 
 if __name__ == '__main__':
