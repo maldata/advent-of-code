@@ -1,5 +1,7 @@
 import re
 
+from random import randint
+
 
 def single_rotation(point, axis, rotation):
     # sines and cosines for 0, pi/2, pi, 3pi/2, 2pi
@@ -36,10 +38,11 @@ def rotate(pt, fr, pr):
 
 class Scanner:
     def __init__(self, orig_points) -> None:
-        self.global_position = None
         self.relative_beacon_pos = orig_points
+        self.global_position = None
         self.orientations = []
         self.locked_orientation_idx = None
+        self.position_known = False
 
         # Getting all the orientations is weird. There are 24 ways the axes can be rotated...
         # Think about rolling a 6-sided die. It can land with each of the 6 faces up, and that
@@ -59,15 +62,36 @@ class Scanner:
                 rotated_points = [rotate(pt, f, p) for pt in orig_points]
                 self.orientations.append(rotated_points)
     
-    def get_overlapping_beacons(self, other):
-        for o in self.orientations:
-            num_overlaps, offset_coords = get_num_overlapping(o, other.relative_beacon_pos)
-            if num_overlaps >= 12:
-                # TODO: lock it in. set the global position and index of the orientation
-                pass
-    
+    def get_global_beacon_positions(self):
+        if not self.position_known:
+            return []
 
-def get_num_overlapping(coords1, coords2):
+        rotated_points = self.orientations[self.locked_orientation_idx]
+        return [(pt[0] + self.global_position[0],
+                 pt[1] + self.global_position[1],
+                 pt[2] + self.global_position[2]) for pt in rotated_points]
+
+    def lock_global_position(self, scanner_pos, orientation_idx):
+        self.position_known = True
+        self.global_position = scanner_pos
+        self.locked_orientation_idx = orientation_idx
+        
+    def try_to_match_beacons(self, other):
+        if not self.position_known:
+            return
+
+        for o_idx in range(len(other.orientations)):
+            o = other.orientations[o_idx]
+            num_overlaps, offset = get_offset_and_overlaps(o, self.get_global_beacon_positions())
+            if num_overlaps >= 12:
+                global_pos = (self.global_position[0] - offset[0],
+                              self.global_position[1] - offset[1],
+                              self.global_position[2] - offset[2])
+                other.lock_global_position(global_pos, o_idx)
+                return
+
+
+def get_offset_and_overlaps(coords1, coords2):
     """
     Given two sets of coordinates, find the offset that maximizes the number
     of overlapping points (then return the number of overlaps and the offset).
@@ -131,15 +155,31 @@ def read_input(file_path):
 
 
 def solve_a(scanners):
-    num_scanners = len(scanners)
-    globally_known = [0]
-    globally_unknown = range(1, num_scanners)
-    all_combos = [(i, j) for i in globally_known for j in globally_unknown]
-    for known_idx, unknown_idx in all_combos:
-        known = scanners[known_idx]
-        unknown = scanners[unknown_idx]
+    # We'll arbitrarily choose the first one in the list 
+    # and declare that it's in the global reference frame.
+    scanner0 = scanners[0]
+    scanner0.lock_global_position((0, 0, 0), 0)
 
-        overlapping_beacons = known.get_overlapping_beacons(unknown)
+    while True:
+        # Get the lists of known and unknown scanners
+        all_known = list(filter(lambda x: x.position_known, scanners))
+        all_unknown = list(filter(lambda x: not x.position_known, scanners))
+
+        if len(all_known) == len(scanners):
+            break
+
+        # Randomly select one known scanner and one unknown scanner.
+        # Yes, you could try every combination of them, but come on.
+        # If we're gonna have fun, let's have FUN.
+        known_idx = randint(0, len(all_known) - 1)
+        unknown_idx = randint(0, len(all_unknown) - 1)
+
+        known = all_known[known_idx]
+        unknown = all_unknown[unknown_idx]
+
+        known.try_to_match_beacons(unknown)
+    
+    # TODO: all scanner positions are now known. Count up the number of unique beacon positions
 
 
 def main():
@@ -147,7 +187,7 @@ def main():
     all_scanners = []
     for coords in all_scanner_coords:
         all_scanners.append(Scanner(coords))
-    all_scanners[0].global_position = (0, 0, 0)    
+
     solve_a(all_scanners)
 
 
