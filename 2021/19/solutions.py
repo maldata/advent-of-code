@@ -37,7 +37,8 @@ def rotate(pt, fr, pr):
 
 
 class Scanner:
-    def __init__(self, orig_points) -> None:
+    def __init__(self, scanner_num, orig_points) -> None:
+        self.id = scanner_num
         self.relative_beacon_pos = orig_points
         self.global_position = None
         self.orientations = []
@@ -75,20 +76,26 @@ class Scanner:
         self.position_known = True
         self.global_position = scanner_pos
         self.locked_orientation_idx = orientation_idx
+
+        msg_template = 'Scanner {0} locked at {1} and orientation {2}'
+        print(msg_template.format(self.id, self.global_position, self.locked_orientation_idx))
         
     def try_to_match_beacons(self, other):
         if not self.position_known:
-            return
+            return False
 
         for o_idx in range(len(other.orientations)):
             o = other.orientations[o_idx]
             num_overlaps, offset = get_offset_and_overlaps(o, self.get_global_beacon_positions())
             if num_overlaps >= 12:
+                print('Match found for scanner {0}'.format(self.id))
                 global_pos = (self.global_position[0] - offset[0],
                               self.global_position[1] - offset[1],
                               self.global_position[2] - offset[2])
                 other.lock_global_position(global_pos, o_idx)
-                return
+                return True
+        
+        return False
 
 
 def get_offset_and_overlaps(coords1, coords2):
@@ -168,25 +175,42 @@ def solve_a(scanners):
         if len(all_known) == len(scanners):
             break
 
+        all_combos = [(k, u) for k in range(len(all_known)) for u in range(len(all_unknown))]
+        for combo in all_combos:
+            known = all_known[combo[0]]
+            unknown = all_unknown[combo[1]]
+
+            result = known.try_to_match_beacons(unknown)
+            if result:
+                break
+
         # Randomly select one known scanner and one unknown scanner.
         # Yes, you could try every combination of them, but come on.
         # If we're gonna have fun, let's have FUN.
-        known_idx = randint(0, len(all_known) - 1)
-        unknown_idx = randint(0, len(all_unknown) - 1)
+        #known_idx = randint(0, len(all_known) - 1)
+        #unknown_idx = randint(0, len(all_unknown) - 1)
 
-        known = all_known[known_idx]
-        unknown = all_unknown[unknown_idx]
+        #known = all_known[known_idx]
+        #unknown = all_unknown[unknown_idx]
 
-        known.try_to_match_beacons(unknown)
+        #known.try_to_match_beacons(unknown)
     
     # TODO: all scanner positions are now known. Count up the number of unique beacon positions
+    unique_beacons = set()
+    for scanner in scanners:
+        for beacon in scanner.get_global_beacon_positions():
+            unique_beacons.add(beacon)
+    
+    print('There are {0} unique beacons'.format(len(unique_beacons)))
 
 
 def main():
     all_scanner_coords = read_input('./input.txt')
+    num_scanners = len(all_scanner_coords)
     all_scanners = []
-    for coords in all_scanner_coords:
-        all_scanners.append(Scanner(coords))
+    for idx in range(num_scanners):
+        coords = all_scanner_coords[idx]
+        all_scanners.append(Scanner(idx, coords))
 
     solve_a(all_scanners)
 
