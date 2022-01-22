@@ -1,7 +1,5 @@
 import re
 
-from random import randint
-
 
 def single_rotation(point, axis, rotation):
     # sines and cosines for 0, pi/2, pi, 3pi/2, 2pi
@@ -103,21 +101,13 @@ def get_offset_and_overlaps(coords1, coords2):
     Given two sets of coordinates, find the offset that maximizes the number
     of overlapping points (then return the number of overlaps and the offset).
     """
-    # Set things up so that, of the two lists of coords, there are fewer in c1 than c2
-    c1 = coords1
-    c2 = coords2
-    if len(coords1) > len(coords2):
-        c1 = coords2
-        c2 = coords1
-
     max_overlaps = 0
     offset_with_max_overlaps = (0, 0, 0)
-    idx_of_combo_with_max_overlaps = 0
 
-    indices_to_align = [(i,j) for i in range(len(c1)) for j in range(i, len(c2))]
+    indices_to_align = [(i,j) for i in range(len(coords1)) for j in range(len(coords2))]
     for combo in indices_to_align:
-        fixed = c1[combo[0]]
-        mobile = c2[combo[1]]
+        fixed = coords1[combo[0]]
+        mobile = coords2[combo[1]]
 
         # Find the offset between the two aligned points
         offset = (fixed[0] - mobile[0], fixed[1] - mobile[1], fixed[2] - mobile[2])
@@ -125,9 +115,9 @@ def get_offset_and_overlaps(coords1, coords2):
         # Move all the "mobile" points by the offset and see if that
         # shifted position is in the list of "fixed" points
         overlaps = 0
-        for m in c2:
+        for m in coords2:
             shifted = (m[0] + offset[0], m[1] + offset[1], m[2] + offset[2])
-            if shifted in c1:
+            if shifted in coords1:
                 overlaps = overlaps + 1
         
         if overlaps > max_overlaps:
@@ -167,14 +157,22 @@ def solve_a(scanners):
     scanner0 = scanners[0]
     scanner0.lock_global_position((0, 0, 0), 0)
 
+    num_prev_known = 0
     while True:
         # Get the lists of known and unknown scanners
         all_known = list(filter(lambda x: x.position_known, scanners))
         all_unknown = list(filter(lambda x: not x.position_known, scanners))
 
-        if len(all_known) == len(scanners):
+        # TODO: maybe some scanners DON'T overlap with any of the others...
+        #  then we'll never stop looping. Maybe bail out if the number of 
+        #  unknown scanners doesn't change from iteration to iteration?
+        num_known = len(all_known)
+
+        if num_known == len(scanners) or num_known == num_prev_known:
             break
 
+        num_prev_known = num_known
+        
         all_combos = [(k, u) for k in range(len(all_known)) for u in range(len(all_unknown))]
         for combo in all_combos:
             known = all_known[combo[0]]
@@ -184,17 +182,6 @@ def solve_a(scanners):
             if result:
                 break
 
-        # Randomly select one known scanner and one unknown scanner.
-        # Yes, you could try every combination of them, but come on.
-        # If we're gonna have fun, let's have FUN.
-        #known_idx = randint(0, len(all_known) - 1)
-        #unknown_idx = randint(0, len(all_unknown) - 1)
-
-        #known = all_known[known_idx]
-        #unknown = all_unknown[unknown_idx]
-
-        #known.try_to_match_beacons(unknown)
-    
     # TODO: all scanner positions are now known. Count up the number of unique beacon positions
     unique_beacons = set()
     for scanner in scanners:
