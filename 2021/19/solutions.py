@@ -82,17 +82,27 @@ class Scanner:
         if not self.position_known:
             return False
 
+        locked_global_pos = None
+        locked_orientation_index = None
+        max_overlaps = 0
+
         for o_idx in range(len(other.orientations)):
             o = other.orientations[o_idx]
             num_overlaps, offset = get_offset_and_overlaps(o, self.get_global_beacon_positions())
-            if num_overlaps >= 12:
+            # print('({0} and {1}, orientation {2}) : {3}'.format(self.id, other.id, o_idx, num_overlaps))
+
+            if num_overlaps >= 12 and num_overlaps > max_overlaps:
                 print('Match found for scanner {0}'.format(self.id))
-                global_pos = (self.global_position[0] - offset[0],
-                              self.global_position[1] - offset[1],
-                              self.global_position[2] - offset[2])
-                other.lock_global_position(global_pos, o_idx)
-                return True
+                max_overlaps = num_overlaps
+                locked_global_pos = (self.global_position[0] - offset[0],
+                                     self.global_position[1] - offset[1],
+                                     self.global_position[2] - offset[2])
+                locked_orientation_index = o_idx
         
+        if max_overlaps >= 12:
+            other.lock_global_position(locked_global_pos, locked_orientation_index)
+            return True
+
         return False
 
 
@@ -137,8 +147,12 @@ def read_input(file_path):
         line = line.strip()
         m = re.match('--- scanner ([0-9]+) ---', line)
         if m:
-            all_scanners.append(scanner_coords)
-            scanner_coords = []
+            # Every time we match the scanner line, take whatever coordinate lines
+            # we've buffered up and glom them together into one entry in all_scanners.
+            # If there are no coordinates, it's because it's the first one we hit.
+            if len(scanner_coords) > 0:
+                all_scanners.append(scanner_coords)
+                scanner_coords = []
             continue
 
         if len(line) == 0:
@@ -147,8 +161,8 @@ def read_input(file_path):
         tmp_coords = [int(i) for i in line.split(',')]
         scanner_coords.append((tmp_coords[0], tmp_coords[1], tmp_coords[2]))
     
-    # The first element of the list will be an empty list, so drop it
-    return all_scanners[1:]
+    all_scanners.append(scanner_coords)
+    return all_scanners
 
 
 def solve_a(scanners):
