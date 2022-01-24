@@ -49,12 +49,12 @@ class Scanner:
         # its negative) into the "upward" orientation, then rotate 4 times around that axis.
         #
         # So, first, the 6 rotations to get the "upward faces":
-        # No rotation, x90, x180, x270, y90, y270
+        # No rotation, x90, x180, x270, z90, z270
         #
         # Remember, x is 0, y is 1, and z is 2. radians are in units of pi/2.
         # Then, for each of those upward faces, we do all four z rotations. So, the sequences are:
-        face_rotations = [(0, 0), (0, 1), (0, 2), (0, 3), (1, 1), (1, 3)]
-        plane_rotations = [(2, 0), (2, 1), (2, 2), (2, 3)]
+        face_rotations = [(0, 0), (0, 1), (0, 2), (0, 3), (2, 1), (2, 3)]
+        plane_rotations = [(1, 0), (1, 1), (1, 2), (1, 3)]
 
         for f in face_rotations:
             for p in plane_rotations:
@@ -154,7 +154,7 @@ def read_input(file_path):
 def solve_a(scanners):
     # We'll arbitrarily choose the first one in the list 
     # and declare that it's in the global reference frame.
-    scanner0 = scanners[0]
+    scanner0 = scanners[6]
     scanner0.lock_global_position((0, 0, 0), 0)
 
     num_prev_known = 0
