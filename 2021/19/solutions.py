@@ -128,14 +128,12 @@ def get_offset_and_overlaps(unknown_relative_coords, known_global_coords):
 
         # Move all the "mobile" points by the offset and see if that
         # shifted position is in the list of "fixed" points
-        overlaps = 0
-        for kgc in known_global_coords:
-            shifted = (kgc[0] - offset[0], kgc[1] - offset[1], kgc[2] - offset[2])
-            if shifted in unknown_relative_coords:
-                overlaps = overlaps + 1
+        shifted_globals = [(kgc[0] - offset[0], kgc[1] - offset[1], kgc[2] - offset[2]) for kgc in known_global_coords]
+        overlapping_pts = filter(lambda sg: sg in unknown_relative_coords, shifted_globals)
+        num_overlaps = len(list(overlapping_pts))
         
-        if overlaps > max_overlaps:
-            max_overlaps = overlaps
+        if num_overlaps > max_overlaps:
+            max_overlaps = num_overlaps
             offset_with_max_overlaps = offset
 
     return max_overlaps, offset_with_max_overlaps
