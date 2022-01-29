@@ -98,6 +98,7 @@ class Scanner:
                                      self.global_position[1] - offset[1],
                                      self.global_position[2] - offset[2])
                 locked_orientation_index = o_idx
+                locked_global_pos = offset
         
         if max_overlaps >= 12:
             other.lock_global_position(locked_global_pos, locked_orientation_index)
@@ -106,7 +107,7 @@ class Scanner:
         return False
 
 
-def get_offset_and_overlaps(coords1, coords2):
+def get_offset_and_overlaps(unknown_relative_coords, known_global_coords):
     """
     Given two sets of coordinates, find the offset that maximizes the number
     of overlapping points (then return the number of overlaps and the offset).
@@ -114,10 +115,13 @@ def get_offset_and_overlaps(coords1, coords2):
     max_overlaps = 0
     offset_with_max_overlaps = (0, 0, 0)
 
-    indices_to_align = [(i,j) for i in range(len(coords1)) for j in range(len(coords2))]
+    num_urc = len(unknown_relative_coords)
+    num_kgc = len(known_global_coords)
+
+    indices_to_align = [(i,j) for i in range(num_urc) for j in range(num_kgc)]
     for combo in indices_to_align:
-        fixed = coords1[combo[0]]
-        mobile = coords2[combo[1]]
+        mobile = unknown_relative_coords[combo[0]]
+        fixed = known_global_coords[combo[1]]
 
         # Find the offset between the two aligned points
         offset = (fixed[0] - mobile[0], fixed[1] - mobile[1], fixed[2] - mobile[2])
@@ -125,9 +129,9 @@ def get_offset_and_overlaps(coords1, coords2):
         # Move all the "mobile" points by the offset and see if that
         # shifted position is in the list of "fixed" points
         overlaps = 0
-        for m in coords2:
-            shifted = (m[0] + offset[0], m[1] + offset[1], m[2] + offset[2])
-            if shifted in coords1:
+        for kgc in known_global_coords:
+            shifted = (kgc[0] - offset[0], kgc[1] - offset[1], kgc[2] - offset[2])
+            if shifted in unknown_relative_coords:
                 overlaps = overlaps + 1
         
         if overlaps > max_overlaps:
@@ -168,7 +172,7 @@ def read_input(file_path):
 def solve_a(scanners):
     # We'll arbitrarily choose the first one in the list 
     # and declare that it's in the global reference frame.
-    scanner0 = scanners[6]
+    scanner0 = scanners[0]
     scanner0.lock_global_position((0, 0, 0), 0)
 
     num_prev_known = 0
@@ -177,12 +181,9 @@ def solve_a(scanners):
         all_known = list(filter(lambda x: x.position_known, scanners))
         all_unknown = list(filter(lambda x: not x.position_known, scanners))
 
-        # TODO: maybe some scanners DON'T overlap with any of the others...
-        #  then we'll never stop looping. Maybe bail out if the number of 
-        #  unknown scanners doesn't change from iteration to iteration?
         num_known = len(all_known)
-
         if num_known == len(scanners) or num_known == num_prev_known:
+            print('Done looping. There are {0} known scanners.'.format(num_known))
             break
 
         num_prev_known = num_known
@@ -196,7 +197,7 @@ def solve_a(scanners):
             if result:
                 break
 
-    # TODO: all scanner positions are now known. Count up the number of unique beacon positions
+    # All scanner positions are now known. Count up the number of unique beacon positions
     unique_beacons = set()
     for scanner in scanners:
         for beacon in scanner.get_global_beacon_positions():
@@ -206,7 +207,7 @@ def solve_a(scanners):
 
 
 def main():
-    all_scanner_coords = read_input('./input.txt')
+    all_scanner_coords = read_input('./input-slim.txt')
     num_scanners = len(all_scanner_coords)
     all_scanners = []
     for idx in range(num_scanners):
