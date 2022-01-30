@@ -204,6 +204,18 @@ def solve_a(scanners):
     print('There are {0} unique beacons'.format(len(unique_beacons)))
 
 
+def solve_b(scanners):
+    num_scanners = len(scanners)
+    combos = [(i, j) for i in range(num_scanners) for j in range(i + 1, num_scanners)]
+    max_dist = 0
+    for combo in combos:
+        s1 = scanners[combo[0]].global_position
+        s2 = scanners[combo[1]].global_position
+
+        dist = abs(s2[0] - s1[0]) + abs(s2[1] - s1[1]) + abs(s2[2] - s1[2])
+        max_dist = max(dist, max_dist)
+
+
 def main():
     all_scanner_coords = read_input('./input.txt')
     num_scanners = len(all_scanner_coords)
@@ -213,6 +225,7 @@ def main():
         all_scanners.append(Scanner(idx, coords))
 
     solve_a(all_scanners)
+    solve_b(all_scanners)
 
 
 if __name__ == '__main__':
