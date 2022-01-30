@@ -205,7 +205,7 @@ def solve_a(scanners):
 
 
 def main():
-    all_scanner_coords = read_input('./input-slim.txt')
+    all_scanner_coords = read_input('./input.txt')
     num_scanners = len(all_scanner_coords)
     all_scanners = []
     for idx in range(num_scanners):
