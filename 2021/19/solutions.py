@@ -215,6 +215,8 @@ def solve_b(scanners):
         dist = abs(s2[0] - s1[0]) + abs(s2[1] - s1[1]) + abs(s2[2] - s1[2])
         max_dist = max(dist, max_dist)
 
+    print('Maximum Manhattan distance is {0}'.format(max_dist))
+
 
 def main():
     all_scanner_coords = read_input('./input.txt')
