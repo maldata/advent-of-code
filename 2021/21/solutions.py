@@ -1,5 +1,6 @@
 from asyncio import all_tasks
 import re
+from turtle import backward
 
 
 def read_input(file_path):
@@ -89,32 +90,61 @@ def get_next_states(s):
 
 def generate_all_states(s0):
     all_states = set()
-    all_states.add(s0)
     states_to_check = set()
     states_to_check.add(s0)
+    forward_map = {}   # a map from a state to all the states it could go to
+    backward_map = {}  # a map from a state to all the states that could've gotten us there
 
     while len(states_to_check) != 0:
         next_states = set()
         for s in states_to_check:
             all_states.add(s)
             ns = get_next_states(s)
+            forward_map[s] = ns
+
+            for n in ns:
+                # There's a little subtlety here. We have to create an empty set
+                # first. We do NOT do set(s), because that will add each element
+                # of our tuple s to the set, when we want the whole thing in there.
+                if n not in backward_map:
+                    backward_map[n] = set()
+                backward_map[n].add(s)
+
             next_states.update(ns)
 
         states_to_check = next_states - all_states
 
-    return all_states
+    return all_states, forward_map, backward_map
+
+
+def num_ways_to_get_to(s, backward_map):
+    if s not in backward_map:
+        return 1
+    
+    precursors = backward_map[s]
+    return sum([num_ways_to_get_to(p, backward_map) for p in precursors])
 
 
 def solve_b(p1_pos, p2_pos):
     # we'll call a "state" ((p1_pos, p1_score), (p2_pos, p2_score))
     initial_state = ((p1_pos, 0), (p2_pos, 0))
-    all_states = generate_all_states(initial_state)
+    all_states, forward_map, backward_map = generate_all_states(initial_state)
     print('Found {0} states'.format(len(all_states)))
 
-    # We can just build the forward map by calling get_next_states()
-    # We can build the backward map kinda the same way
-    forward_map = {}   # a map from a state to all the states it could go to
-    backward_map = {}  # a map from a state to all the states that could've gotten us here
+    p0_wins = set()
+    p1_wins = set()
+    ways_for_0_to_win = 0
+    ways_for_1_to_win = 0
+    for s in all_states:
+        if s[0][1] >= 21:
+            p0_wins.add(s)
+            ways_for_0_to_win = ways_for_0_to_win + num_ways_to_get_to(s, backward_map)
+        elif s[1][1] >= 21:
+            p1_wins.add(s)
+            ways_for_1_to_win = ways_for_1_to_win + num_ways_to_get_to(s, backward_map)
+
+    print('There are {0} ways for player 0 to win'.format(ways_for_0_to_win))
+    print('There are {0} ways for player 1 to win'.format(ways_for_1_to_win))
 
 
 def main():
