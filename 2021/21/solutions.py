@@ -125,9 +125,60 @@ def num_ways_to_get_to(s, backward_map):
     return sum([num_ways_to_get_to(p, backward_map) for p in precursors])
 
 
+def get_all_quantum_rolls(die_faces, num_rolls):
+    if num_rolls == 1:
+        return [[i] for i in range(1, die_faces + 1)]
+    
+    agg = []
+    for i in get_all_quantum_rolls(die_faces, num_rolls - 1):
+        for j in range(1, die_faces + 1):
+            aug = i[:]
+            aug.append(j)
+            agg.append(aug)
+    return agg
+
+
+def states_after_quantum_rolls(s0, quantum_rolls, player):
+    opponent = 0 if player == 1 else 0
+    player_state = s0[player]
+    player_pos = player_state[0]
+    player_score = player_state[1]
+    opponent_state = s0[opponent]
+
+    new_states = []
+    for qr in quantum_rolls:
+        sum_of_rolls = sum(qr)
+        new_position = (((player_pos - 1) + sum_of_rolls) % 10) + 1
+        new_score = player_score + new_position
+
+        if player == 0:
+            new_state = ((new_position, new_score), opponent_state)
+        else:
+            new_state = (opponent_state, (new_position, new_score))
+
+        new_states.append(new_state)
+
+    return new_states
+
 def solve_b(p1_pos, p2_pos):
     # we'll call a "state" ((p1_pos, p1_score), (p2_pos, p2_score))
+
+    # As we play the game, 3 universes get spawned with each roll of the die, moving us into
+    # 3 states (sometimes one we've already been in, sometimes a new one). All we really need
+    # to know is in how many universes we end up in each state. Then, when we're done,
+    # we'll look at all the end-game states and simply look up how many universes ended up there.
+    num_universes = {}
+
     initial_state = ((p1_pos, 0), (p2_pos, 0))
+    num_universes[initial_state] = 1
+
+    all_quantum_roll_combos = get_all_quantum_rolls(3, 3)
+    next_states = states_after_quantum_rolls(initial_state, all_quantum_roll_combos)
+
+    # Now next_states is a list of all the states we could end up in based on
+    # every combination of the three dice rolls from the state we were in.
+
+
     all_states, forward_map, backward_map = generate_all_states(initial_state)
     print('Found {0} states'.format(len(all_states)))
 
