@@ -181,6 +181,10 @@ def solve_b(p1_pos, p2_pos):
 
     all_quantum_roll_combos = get_all_quantum_rolls(3, 3)
     roll_sums = [sum(i) for i in all_quantum_roll_combos]
+
+    # We don't really care what order the rolls happen, it just matters what the sum is.
+    # There's only one way to get a sum of 9 (rolling three threes), but 7 ways to roll a sum of 6.
+    # roll_sum_counts is a map from the sum (the key) to the number of ways it can be rolled (the value).
     roll_sum_counts = {}
     for rs in roll_sums:
         if rs not in roll_sum_counts:
@@ -188,46 +192,62 @@ def solve_b(p1_pos, p2_pos):
         else:
             roll_sum_counts[rs] = roll_sum_counts[rs] + 1
 
-    # We don't really care what order the rolls happen, it just matters what the sum is.
-    # There's only one way to get a sum of 9 (rolling three threes), but 7 ways to roll a sum of 6.
-    # roll_sum_counts is a map from the sum (the key) to the number of ways it can be rolled (the value).
+    player = 0
+    parents = set()
+    parents.add(initial_state)
 
-    turn = 0
+    while True:
+        new_children = set()
+        for p in parents:
+            opponent = 1 - player  # a fun trick to toggle between 0 and 1 without the ol' if/else
+            player_state = p[player]
+            player_pos = player_state[0]
+            player_score = player_state[1]
+            opponent_state = p[opponent]
+            opponent_pos = opponent_state[0]
+            opponent_score = opponent_state[1]
 
-    # states_to_check is a list of all the states we could end up in based on every combination of the
-    # three dice rolls from the state we are currently in. There will be duplicates, and that's fine.
-    states_to_check = states_after_quantum_rolls(initial_state, all_quantum_roll_combos, turn)
-    parents = [initial_state] * len(states_to_check)
+            # If someone already won, nothing else to do for this parent, move on to the next one
+            if player_score >= 21 or opponent_score >= 21:
+                continue
 
-    while len(states_to_check) > 0:
+            for roll_sum in roll_sum_counts:
+                count = roll_sum_counts[roll_sum]
+
+                # get the new state based on the roll sum and whose turn it is
+                new_position = (((player_pos - 1) + roll_sum) % 10) + 1
+                new_score = player_score + new_position
+
+                if player == 0:
+                    new_state = ((new_position, new_score), opponent_state)
+                else:
+                    new_state = (opponent_state, (new_position, new_score))
+
+                new_children.add(new_state)
+
+                # the number of new universes in which that new state occurs is the roll sum count 
+                # times the number of universes in which the parent occurs (because we can get that
+                # roll sum many different ways)
+                if new_state in num_universes:
+                    num_universes[new_state] = num_universes[new_state] + (num_universes[p] * count)
+                else:
+                    num_universes[new_state] = num_universes[p] * count
+
+        # the set of new children will be the parents on the next turn. If there aren't any, we're done!
+        parents = new_children
+        if len(parents) == 0:
+            break
+
         # toggle whose turn will be next
-        turn = 0 if turn == 1 else 1
+        player = 1 - player
 
-        # The number of universes in which this child state appears is the number of universes in which
-        # the parent state appears. If we see it more than once, add another num_universes_of_parent to the count
-        next_states = []
-        next_parents = []
-        for s_idx in range(len(states_to_check)):
-            s = states_to_check[s_idx]
-            p = parents[s_idx]
-            num_universes_of_parent = num_universes[p]
+    p0_win_states = filter(lambda x: x[0][1] >= 21, num_universes.keys())
+    p1_win_states = filter(lambda x: x[1][1] >= 21, num_universes.keys())
+    
+    num_p0_wins = sum([num_universes[i] for i in p0_win_states])
+    num_p1_wins = sum([num_universes[i] for i in p1_win_states])
 
-            if s not in num_universes:
-                num_universes[s] = num_universes_of_parent
-            else:
-                num_universes[s] = num_universes[s] + num_universes_of_parent
-        
-            # Now list out all the children of this child state and put them in next_states
-            tmp = states_after_quantum_rolls(s, all_quantum_roll_combos, turn)
-            next_states.extend(tmp)
-            next_parents.extend([s] * len(tmp))
-        
-        # Now that we've checked all states in states_to_check (and aggregated them into the number of universes, possibly
-        # more than once), we've got the set of possible states for the next player, so we iterate again.
-        states_to_check = next_states
-        parents = next_parents
-
-    pass
+    print('P0 wins in {0} universes. P1 wins in {1} universes. {2} universes total.'.format(num_p0_wins, num_p1_wins, num_p0_wins + num_p1_wins))
 
 
 def main():
