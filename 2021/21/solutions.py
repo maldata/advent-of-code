@@ -53,79 +53,11 @@ def solve_a(positions):
     print('Result is {0}'.format(loser_score * total_rolls))
 
 
-def get_next_states_player(s, p):
-    if p < 0 or p > 1:
-        print('Bad player index {0}'.format(p))
-        return
-    
-    moving_player = p
-    static_player = 0 if p == 1 else 1
-    moving_player_state = s[moving_player]
-    static_player_state = s[static_player]
-
-    possible_next_states = []
-
-    # If the score of the moving player is already 21 or greater, we're done, no more moves.
-    if moving_player_state[1] >= 21:
-        return possible_next_states
-
-    num_spaces = 10
-    for roll in range(1,4):
-        new_pos = (((moving_player_state[0] - 1) + roll) % num_spaces) + 1
-        new_score = moving_player_state[1] + new_pos
-        
-        if moving_player == 0:
-            possible_next_states.append(((new_pos, new_score), static_player_state))
-        else:
-            possible_next_states.append((static_player_state, (new_pos, new_score)))
-
-    return possible_next_states
-
-
-def get_next_states(s):
-    ns0 = get_next_states_player(s, 0)
-    ns1 = get_next_states_player(s, 1)
-    return ns0 + ns1
-
-
-def generate_all_states(s0):
-    all_states = set()
-    states_to_check = set()
-    states_to_check.add(s0)
-    forward_map = {}   # a map from a state to all the states it could go to
-    backward_map = {}  # a map from a state to all the states that could've gotten us there
-
-    while len(states_to_check) != 0:
-        next_states = set()
-        for s in states_to_check:
-            all_states.add(s)
-            ns = get_next_states(s)
-            forward_map[s] = ns
-
-            for n in ns:
-                # There's a little subtlety here. We have to create an empty set
-                # first. We do NOT do set(s), because that will add each element
-                # of our tuple s to the set, when we want the whole thing in there.
-                if n not in backward_map:
-                    backward_map[n] = set()
-                backward_map[n].add(s)
-
-            next_states.update(ns)
-
-        states_to_check = next_states - all_states
-
-    return all_states, forward_map, backward_map
-
-
-def num_ways_to_get_to(s, backward_map):
-    if s not in backward_map:
-        return 1
-    
-    precursors = backward_map[s]
-    return sum([num_ways_to_get_to(p, backward_map) for p in precursors])
-
-
 def get_all_quantum_rolls(die_faces, num_rolls):
+    """
+    Returns a list of lists describing every possible outcome of num_rolls rolls of a die_faces-sided die.
+    This won't ever change, so we should only use this once and then cache the result.
+    """
     if num_rolls == 1:
         return [[i] for i in range(1, die_faces + 1)]
     
@@ -138,70 +70,103 @@ def get_all_quantum_rolls(die_faces, num_rolls):
     return agg
 
 
-def states_after_quantum_rolls(s0, quantum_rolls, player):
-    opponent = 0 if player == 1 else 0
-    player_state = s0[player]
+def get_num_wins(roll_dist, s, outcome_cache):
+    """
+    Given the distribution of rolls (i.e., a map from the sum of the dice to the number of possible ways to get
+    that sum), the state, and a cache of pre-calculated outcomes, get the outcome for state s. The outcome is a
+    tuple (number of universes in which player 0 wins from state s, ditto for player 1).
+
+    This function doesn't return anything, it just gloms it all together in the outcome cache dictionary.
+    We could do the same thing without even calling this function by using memoization (like functools.lru_cache),
+    but it's fun to implent things oneself, so I did.
+    """
+    # If we've already seen this state, we're done.
+    if s in outcome_cache:
+        return
+
+    p0_state = s[0]
+    p1_state = s[1]
+    player_idx = s[2]
+    
+    # If player 0 has 21 or more points, there's only one way for things to end: p0 wins once, p1 wins 0 times.
+    # Same if player 1 has 21 or more points.
+    if p0_state[1] >= 21:
+        outcome = (1, 0)
+        outcome_cache[s] = outcome
+        return
+    if p1_state[1] >= 21:
+        outcome = (0, 1)
+        outcome_cache[s] = outcome
+        return
+    
+    # In any other case, use the roll distribution to figure out what the next states will be (and in how many
+    # universes we'll see them). Get the outcome for each state, multiply the outcomes by the count of each state,
+    # aggregate them, and we're all set.
+    opponent_idx = 1 - player_idx  # a fun trick to toggle between 0 & 1
+    player_state = p0_state if player_idx == 0 else p1_state
+    opponent_state = p0_state if player_idx == 1 else p1_state
     player_pos = player_state[0]
     player_score = player_state[1]
-    opponent_state = s0[opponent]
 
-    new_states = []
-    for qr in quantum_rolls:
-        sum_of_rolls = sum(qr)
-        new_position = (((player_pos - 1) + sum_of_rolls) % 10) + 1
+    total_p0_wins = 0
+    total_p1_wins = 0
+    for roll_sum in roll_dist:
+        count = roll_dist[roll_sum]
+
+        # get the new state based on the roll sum and whose turn it is
+        new_position = (((player_pos - 1) + roll_sum) % 10) + 1
         new_score = player_score + new_position
 
-        if player == 0:
-            new_state = ((new_position, new_score), opponent_state)
+        if player_idx == 0:
+            new_state = ((new_position, new_score), opponent_state, opponent_idx)
         else:
-            new_state = (opponent_state, (new_position, new_score))
+            new_state = (opponent_state, (new_position, new_score), opponent_idx)
 
-        new_states.append(new_state)
+        get_num_wins(roll_dist, new_state, outcome_cache)
+        child_p0_wins, child_p1_wins = outcome_cache[new_state]
+        total_p0_wins = total_p0_wins + (count * child_p0_wins)
+        total_p1_wins = total_p1_wins + (count * child_p1_wins)
+    
+    outcome = (total_p0_wins, total_p1_wins)
+    outcome_cache[s] = outcome
 
-    return new_states
 
-def solve_b(p1_pos, p2_pos):
-    # we'll call a "state" ((p1_pos, p1_score), (p2_pos, p2_score))
+def solve_b(p0_pos, p1_pos):
+    # We'll call a "state" ((p0_pos, p0_score), (p1_pos, p1_score), next_player)
 
-    # As we play the game, 3 universes get spawned with each roll of the die, moving us into
-    # 3 states (sometimes one we've already been in, sometimes a new one). All we really need
-    # to know is in how many universes we end up in each state. Then, when we're done,
-    # we'll look at all the end-game states and simply look up how many universes ended up there.
-    num_universes = {}
-
-    initial_state = ((p1_pos, 0), (p2_pos, 0))
-    num_universes[initial_state] = 1
+    # We'll also keep track of the outcome given a particular state. As we spawn new universes,
+    # we might encounter a state that has already been solved. So, we won't bother solving them again.
+    # Key is a state, value is a tuple (games won by p0, games won by p1).
+    outcomes = {}
+    initial_state = ((p0_pos, 0), (p1_pos, 0), 0)
 
     all_quantum_roll_combos = get_all_quantum_rolls(3, 3)
-    next_states = states_after_quantum_rolls(initial_state, all_quantum_roll_combos)
+    roll_sums = [sum(i) for i in all_quantum_roll_combos]
 
-    # Now next_states is a list of all the states we could end up in based on
-    # every combination of the three dice rolls from the state we were in.
+    # We don't really care what order the rolls happen, it just matters what the sum is.
+    # There's only one way to get a sum of 9 (rolling three threes), but 7 ways to roll a sum of 6.
+    # roll_sum_counts is a map from the sum (the key) to the number of ways it can be rolled (the value).
+    roll_sum_counts = {}
+    for rs in roll_sums:
+        if rs not in roll_sum_counts:
+            roll_sum_counts[rs] = 1
+        else:
+            roll_sum_counts[rs] = roll_sum_counts[rs] + 1
 
+    get_num_wins(roll_sum_counts, initial_state, outcomes)
+    num_p0_wins, num_p1_wins = outcomes[initial_state]
 
-    all_states, forward_map, backward_map = generate_all_states(initial_state)
-    print('Found {0} states'.format(len(all_states)))
-
-    p0_wins = set()
-    p1_wins = set()
-    ways_for_0_to_win = 0
-    ways_for_1_to_win = 0
-    for s in all_states:
-        if s[0][1] >= 21:
-            p0_wins.add(s)
-            ways_for_0_to_win = ways_for_0_to_win + num_ways_to_get_to(s, backward_map)
-        elif s[1][1] >= 21:
-            p1_wins.add(s)
-            ways_for_1_to_win = ways_for_1_to_win + num_ways_to_get_to(s, backward_map)
-
-    print('There are {0} ways for player 0 to win'.format(ways_for_0_to_win))
-    print('There are {0} ways for player 1 to win'.format(ways_for_1_to_win))
+    print('P0 wins in {0} universes. P1 wins in {1} universes. {2} universes total.'.format(num_p0_wins, num_p1_wins, num_p0_wins + num_p1_wins))
+    if num_p0_wins > num_p1_wins:
+        print('P0 wins more: {0}'.format(num_p0_wins))
+    else:
+        print('P1 wins more: {0}'.format(num_p1_wins))
 
 
 def main():
     player1_pos, player2_pos = read_input('./input.txt')
     solve_a([player1_pos, player2_pos])
-    player1_pos, player2_pos = read_input('./input-test.txt')
+    player1_pos, player2_pos = read_input('./input.txt')
     solve_b(player1_pos, player2_pos)
 
 
