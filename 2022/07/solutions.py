@@ -6,11 +6,6 @@ class Node:
         self._parent = parent
         self._name = name
 
-        if parent is None:
-            self._full_name = self._name
-        else:
-            self._full_name = parent.get_full_name() + '/' + self._name
-
     def get_parent(self):
         return self._parent
 
@@ -18,13 +13,15 @@ class Node:
         return self._name
 
     def get_full_name(self):
-        return self._full_name
+        raise NotImplementedError
 
     def get_size(self):
         raise NotImplementedError
 
 
 class DirNode(Node):
+    dir_register = {}
+
     def __init__(self, name, parent=None):
         super().__init__(name, parent)
         self._children = []
@@ -34,14 +31,26 @@ class DirNode(Node):
             return 0
         else:
             return sum([c.get_size() for c in self._children])
-
+        
     def add_child(self, child):
-        self._children.append(child)
+        already_in = False
+        for c in self._children:
+            already_in = already_in or c.get_name() == child.get_name()
+
+        if not already_in:
+            self._children.append(child)
+            DirNode.dir_register[self.get_full_name()] = self
 
     def get_child_by_name(self, child_name):
         for c in self._children:
             if c.get_name() == child_name:
                 return c
+    
+    def get_full_name(self):
+        if self._parent is None:
+            return '/'
+        else:
+            return self._parent.get_full_name() + self._name + '/'
 
 
 class FileNode(Node):
@@ -51,9 +60,16 @@ class FileNode(Node):
 
     def get_size(self):
         return self._size
+    
+    def get_full_name(self):
+        if self._parent is None:
+            print('File with no parent!!!')
+            return None
+        else:
+            return self._parent.get_full_name() + self._name
 
 
-def part1():
+def load_tree():
     with open('input.txt', 'r') as f:
         all_lines = f.readlines()
 
@@ -95,12 +111,36 @@ def part1():
             print('Something terrible has happened!')
             break
 
-    root_node.get_size()
+    return root_node
+
+
+def part1():
+    total = 0
+    for d_name in DirNode.dir_register:
+        node = DirNode.dir_register[d_name]
+        if node.get_size() <= 100000:
+            total = total + node.get_size()
+
+    print(f'Total sizes of all dirs under 100k: {total}')
+    
 
 def part2():
-    pass
+    used_size_before = DirNode.dir_register['/'].get_size()
+    total_disk_size = 70000000
+    required_free_space = 30000000
+    min_dir_to_delete_size = used_size_before
+    for d_name in DirNode.dir_register:
+        node = DirNode.dir_register[d_name]
+        dir_size = node.get_size()
+        used_size_after = used_size_before - dir_size
+        free_after = total_disk_size - used_size_after
+        if free_after >= required_free_space and dir_size < min_dir_to_delete_size:
+            min_dir_to_delete_size = dir_size
+    
+    print(f'The smallest directory we can delete is sized {min_dir_to_delete_size}')
 
 
 if __name__ == '__main__':
+    load_tree()    
     part1()
     part2()
