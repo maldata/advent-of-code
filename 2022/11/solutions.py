@@ -2,6 +2,8 @@ import re
 
 
 class Monkey:
+    relief_mod = 1
+
     def __init__(self, lines, relief_divisor) -> None:
         self._op_type = '+'
         self._op_arg = 0
@@ -38,6 +40,7 @@ class Monkey:
             elif key.startswith('Test'):
                 m = re.match('divisible by ([0-9]+)', value)
                 self._test_div = int(m.group(1))
+                Monkey.relief_mod = Monkey.relief_mod * self._test_div
             elif key.startswith('If true'):
                 m = re.match('throw to monkey ([0-9]+)', value)
                 self._true_throw = int(m.group(1))
@@ -63,7 +66,21 @@ class Monkey:
         else:
             print(f'Unknown operator: {self._op_type}')
         
-        test_val = item // self._relief_divisor
+        # If we have a relief divisor, then we're probably ok. If we don't, then
+        # we'll need to reduce the value of the item in a way that won't change
+        # subsequent rounds, or things will balloon out of control. So, if the divisor
+        # is 1, calculate the value of the item modulo the product of ALL divisors.
+        # Example: say we only have two monkeys, one with test divisor 7 and the other
+        # with test divisor 3. The product is 21.
+        #   (187 % 7) = (187 % 21) % 7 = 5
+        #   (187 % 3) = (187 % 21) % 3 = 1
+        # We can reduce the large number (187) by taking it mod 21... then later when we
+        # test if it's divisible by 3 or 7, it doesn't change anything.
+        if self._relief_divisor == 1:
+            test_val = item % Monkey.relief_mod
+        else:
+            test_val = item // self._relief_divisor
+        
         if test_val % self._test_div == 0:
             return self._true_throw, test_val
         else:
@@ -74,6 +91,7 @@ class Monkey:
 
 
 def load_monkeys(file_path, relief_divisor):
+    Monkey.relief_mod = 1  # Reset when we load monkeys
     with open(file_path, 'r') as f:
         all_lines = f.readlines()
 
@@ -95,7 +113,7 @@ def load_monkeys(file_path, relief_divisor):
 
 
 def calc_monkey_business(file_path, rounds, relief_divisor):
-    monkeys = load_monkeys(file_path, relief_divisor)    
+    monkeys = load_monkeys(file_path, relief_divisor)
     for round in range(rounds):
         #print(f'Starting round {round}')
         for m in monkeys:
