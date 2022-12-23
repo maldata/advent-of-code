@@ -50,6 +50,19 @@ def preprocess_lines(file_path):
     return all_lines, num_rows, num_cols
 
 
+def part2(landscape, height_map, dest_coord):
+    # Get all the coordinates that have a height of 0
+    coords0 = [coord for coord in height_map if height_map[coord] == 0]
+    dists = [landscape.shortest_route(c, dest_coord) for c in coords0]
+    z = zip(coords0, dists)
+    f = filter(lambda x: x[1] is not None, z)  # filter out routes that don't get to the end
+    l = list(f)
+    l.sort(key=lambda x: x[1])
+    # print(l[0])  # shortest - prints ((26,0), 377)
+    # print(l[-1]) # longest - prints ((0,6), 407)
+    return l[0][1]
+
+
 if __name__ == '__main__':
     preprocessed_lines, num_rows, num_cols = preprocess_lines('./input.txt')
     heightmap, start_coord, dest_coord = generate_map(preprocessed_lines, num_rows, num_cols)
@@ -59,3 +72,6 @@ if __name__ == '__main__':
     
     part1 = landscape.shortest_route(start_coord, dest_coord)
     print(f'Shortest path is {part1} steps')
+
+    min_a = part2(landscape, heightmap, dest_coord)
+    print(f'Shortest path from any a is {min_a} steps')

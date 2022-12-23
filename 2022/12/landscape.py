@@ -42,7 +42,7 @@ class Landscape:
             return None
 
     def shortest_route(self, start_coord, dest_coord):
-        self.reset()
+        self.reset()  # Reset the state of all nodes
         start_node = self.get_node(start_coord)
         end_node = self.get_node(dest_coord)
         if start_node is None or end_node is None:
@@ -69,5 +69,9 @@ class Landscape:
 
             # Pick a new current node (the unvisited node with the lowest min_dist)
             current_node = self.get_unvisited_node_with_lowest_dist()
+            if current_node is None:
+                # There are places where we get stuck and can't get to the end node.
+                # In those cases, we just return None.
+                return None
 
         return end_node.min_dist
