@@ -1,4 +1,3 @@
-
 def part1():
     with open('./input.txt', 'r') as f:
         all_lines = f.readlines()
@@ -15,9 +14,31 @@ def part1():
 
 
 def part2():
-    print('Part 2, need to pick out the strings of spelled out numbers also')
-    print('That kinda sucks, because sometimes letters can be shared,')
-    print('like in "oneight" or "twone"')
+    with open('./input.txt', 'r') as f:
+        all_lines = f.readlines()
+    
+    all_lines = [l.strip() for l in all_lines]
+    calibration_values = []
+    for line in all_lines:
+        exploded_line = [i for i in line]
+        numbers = filter(lambda x: x[1].isnumeric(), enumerate(exploded_line))
+        indices_and_values = list(numbers)
+        indices_and_values = [(p[0], int(p[1])) for p in indices_and_values]
+
+        # TODO: line 16 has two instances of "two" in it... we need to find both!
+
+        for text_num in (('one', 1), ('two', 2), ('three', 3), 
+                         ('four', 4), ('five', 5), ('six', 6),
+                         ('seven', 7), ('eight', 8), ('nine', 9)):
+            index = line.find(text_num[0])
+            if index >= 0:
+                indices_and_values.append((index, text_num[1]))
+   
+        indices_and_values.sort(key=lambda x: x[0])
+        values = [i[1] for i in indices_and_values]
+        calibration_values.append(values[0] + values[-1])
+    
+    print(f'Part 2: {sum(calibration_values)}')
 
 
 def main():
